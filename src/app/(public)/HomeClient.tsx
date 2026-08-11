@@ -217,22 +217,22 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
       {/* ═══════════════════════════════════════════ */}
       {/* CONTACT SECTION */}
       {/* ═══════════════════════════════════════════ */}
-      <section id="contact" className="py-16 sm:py-24 relative overflow-hidden">
+      <section id="contact" className="py-16 sm:py-24 relative overflow-hidden w-full flex flex-col items-center justify-center">
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-b from-black via-[var(--color-surface-900)] to-black" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--color-accent-500)_0%,_transparent_60%)] opacity-[0.03]" />
 
-        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-[family-name:var(--font-display)] leading-tight">
+        <div className="relative w-full max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-center">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-[family-name:var(--font-display)] leading-tight text-center w-full">
             Let&apos;s Create
             <br />
             <span className="gradient-text">Something Amazing</span>
           </h2>
-          <p className="text-center text-sm text-[var(--color-text-muted)] mt-4 max-w-md mx-auto">
+          <p className="text-center text-sm text-[var(--color-text-muted)] mt-4 max-w-md mx-auto w-full">
             Got a project in mind? I&apos;d love to hear about it. Let&apos;s bring your vision to life.
           </p>
 
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
             {settings?.contactEmail && (
               <a
                 href={`mailto:${settings.contactEmail}`}
