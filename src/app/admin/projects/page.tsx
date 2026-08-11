@@ -2,10 +2,18 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import ProjectListClient from "./ProjectListClient";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProjectsPage() {
-  const projects = await prisma.project.findMany({
-    orderBy: { sortOrder: "asc" },
-  });
+  let projects: any[] = [];
+
+  try {
+    projects = await prisma.project.findMany({
+      orderBy: { sortOrder: "asc" },
+    });
+  } catch {
+    // Database tables may not exist yet on first deploy
+  }
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">

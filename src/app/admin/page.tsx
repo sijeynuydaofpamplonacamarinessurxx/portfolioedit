@@ -1,20 +1,31 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 
-export default async function AdminDashboard() {
-  const [totalProjects, featuredCount, categories] = await Promise.all([
-    prisma.project.count(),
-    prisma.project.count({ where: { featured: true } }),
-    prisma.project.groupBy({
-      by: ["category"],
-      _count: { category: true },
-    }),
-  ]);
+export const dynamic = "force-dynamic";
 
-  const recentProjects = await prisma.project.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 5,
-  });
+export default async function AdminDashboard() {
+  let totalProjects = 0;
+  let featuredCount = 0;
+  let categories: any[] = [];
+  let recentProjects: any[] = [];
+
+  try {
+    [totalProjects, featuredCount, categories] = await Promise.all([
+      prisma.project.count(),
+      prisma.project.count({ where: { featured: true } }),
+      prisma.project.groupBy({
+        by: ["category"],
+        _count: { category: true },
+      }),
+    ]);
+
+    recentProjects = await prisma.project.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 5,
+    });
+  } catch {
+    // Database tables may not exist yet on first deploy
+  }
 
   const stats = [
     { label: "Total Projects", value: totalProjects, icon: "📹" },
