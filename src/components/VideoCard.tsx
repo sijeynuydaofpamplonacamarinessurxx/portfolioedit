@@ -96,12 +96,12 @@ export default function VideoCard({
               ref={videoRef}
               src={videoUrl}
               className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
-                !thumbnailUrl || (isHovered && isHoverable) ? "opacity-100" : "opacity-0"
+                thumbnailUrl && !(isHovered && isHoverable) ? "opacity-0" : "opacity-100"
               }`}
               muted
               loop
               playsInline
-              preload="none"
+              preload="metadata"
               onLoadedData={() => {
                 if (!thumbnailUrl) setIsLoaded(true);
               }}
