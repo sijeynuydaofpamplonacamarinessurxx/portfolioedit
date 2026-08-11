@@ -67,9 +67,7 @@ export default function VideoLightbox({ isOpen, onClose, videoUrl, title }: Vide
 
       {/* Video player */}
       <div className="w-full max-w-4xl mx-4 animate-scale-in">
-        {title && (
-          <h3 className="text-sm font-medium text-white/60 mb-3 font-[family-name:var(--font-display)]">{title}</h3>
-        )}
+
         <video
           src={videoUrl}
           controls
