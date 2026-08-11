@@ -49,16 +49,7 @@ export default function VideoCard({
     return () => observer.disconnect();
   }, []);
 
-  // Play/pause on hover (desktop only)
-  useEffect(() => {
-    if (!isHoverable || !videoRef.current) return;
-    if (isHovered) {
-      videoRef.current.play().catch(() => {});
-    } else {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-    }
-  }, [isHovered, isHoverable]);
+  // No need for hover play/pause — videos always autoplay as previews
 
   // Force all previews to be rectangular (16:9)
   const aspectClass = "aspect-video";
@@ -91,22 +82,17 @@ export default function VideoCard({
               />
             )}
 
-            {/* Video — on desktop: plays on hover; on mobile: shows with play icon */}
+            {/* Video — always autoplays as a live preview */}
             <video
               ref={videoRef}
               src={videoUrl}
-              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
-                thumbnailUrl && !(isHovered && isHoverable) ? "opacity-0" : "opacity-100"
-              }`}
+              className="absolute inset-0 w-full h-full object-cover"
               muted
               loop
               playsInline
+              autoPlay
               preload="metadata"
-              onLoadedData={() => {
-                if (!thumbnailUrl) setIsLoaded(true);
-              }}
-              // On mobile (no hover), autoplay muted loop
-              {...(!isHoverable && { autoPlay: true })}
+              onLoadedData={() => setIsLoaded(true)}
             />
           </>
         )}
