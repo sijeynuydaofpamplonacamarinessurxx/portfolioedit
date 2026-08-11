@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Project {
+  id           String   @id @default(cuid())
+  title        String
+  slug         String   @unique
+  description  String?
+  category     String
+  videoUrl     String
+  thumbnailUrl String?
+  aspectRatio  String   @default("16:9")
+  featured     Boolean  @default(false)
+  sortOrder    Int      @default(0)
+  caseStudy    String?
+  beforeUrl    String?
+  afterUrl     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model SiteSettings {
+  id           String  @id @default("singleton")
+  heroTitle    String  @default("Video Editor & Motion Designer")
+  heroSubtitle String  @default("Turning raw footage into cinematic stories")
+  showreelUrl  String?
+  contactEmail String?
+  socialLinks  String?
+}

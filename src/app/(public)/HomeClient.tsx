@@ -1,0 +1,262 @@
+"use client";
+
+import { useState } from "react";
+import VideoCard from "@/components/VideoCard";
+import VideoLightbox from "@/components/VideoLightbox";
+import CategoryFilter from "@/components/CategoryFilter";
+import BeforeAfterSlider from "@/components/BeforeAfterSlider";
+import { CATEGORIES } from "@/lib/utils";
+
+interface Project {
+  id: string;
+  title: string;
+  slug: string;
+  description: string | null;
+  category: string;
+  videoUrl: string;
+  thumbnailUrl: string | null;
+  aspectRatio: string;
+  featured: boolean;
+  beforeUrl: string | null;
+  afterUrl: string | null;
+}
+
+interface Settings {
+  heroTitle: string;
+  heroSubtitle: string;
+  showreelUrl: string | null;
+  contactEmail: string | null;
+  socialLinks: string | null;
+}
+
+interface HomeClientProps {
+  projects: Project[];
+  beforeAfterProjects: Project[];
+  settings: Settings | null;
+}
+
+export default function HomeClient({ projects, beforeAfterProjects, settings }: HomeClientProps) {
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [lightbox, setLightbox] = useState<{ url: string; title: string } | null>(null);
+
+  const filteredProjects =
+    activeCategory === "all"
+      ? projects
+      : projects.filter((p) => p.category === activeCategory);
+
+  const heroTitle = settings?.heroTitle || "Video Editor & Motion Designer";
+  const heroSubtitle = settings?.heroSubtitle || "Turning raw footage into cinematic stories";
+
+  return (
+    <>
+      {/* ═══════════════════════════════════════════ */}
+      {/* HERO SECTION */}
+      {/* ═══════════════════════════════════════════ */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Background video / gradient */}
+        {settings?.showreelUrl ? (
+          <video
+            src={settings.showreelUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover opacity-30"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--color-surface-800)_0%,_black_60%)]" />
+        )}
+
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black" />
+
+        {/* Content */}
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16">
+          {/* Left: Logo */}
+          <div className="text-center md:text-left">
+            <h1 className="text-[20vw] sm:text-[15vw] md:text-[6rem] lg:text-[10rem] font-bold font-[family-name:var(--font-display)] tracking-tighter text-white uppercase leading-none">
+              SIJEY<span className="text-[var(--color-accent-500)]">.</span>
+            </h1>
+            <p className="text-xs sm:text-sm text-[var(--color-text-muted)] uppercase tracking-[0.3em] mt-4">
+              Video Editor, Motion Designer & Storyteller
+            </p>
+          </div>
+          
+          {/* Middle: Line */}
+          <div className="hidden md:block w-px h-64 bg-gradient-to-b from-transparent via-white/40 to-transparent"></div>
+          <div className="md:hidden h-px w-full max-w-xs bg-gradient-to-r from-transparent via-white/40 to-transparent my-4"></div>
+
+          {/* Right: Description */}
+          <div className="max-w-xl text-center md:text-left">
+            <div className="space-y-4 text-sm sm:text-base text-[var(--color-text-secondary)] leading-relaxed">
+              <p>
+                I&apos;m a video editor and motion designer specializing in storytelling,
+                AMV edits, and shortform content that captivates audiences.
+              </p>
+              <p>
+                With a keen eye for pacing, color grading, and visual effects, I transform
+                raw footage into polished, emotionally resonant pieces that leave lasting impressions.
+              </p>
+              <p className="italic text-white/70">
+                Every frame is intentional. Every cut serves the story.
+              </p>
+            </div>
+            
+            {/* Tools */}
+            <div className="pt-8 flex flex-col items-center md:items-start">
+              <p className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-[0.2em] mb-3">Tools</p>
+              <div className="flex flex-wrap justify-center md:justify-start gap-2">
+                {["DaVinci Resolve"].map((tool) => (
+                  <span
+                    key={tool}
+                    className="text-[11px] px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[var(--color-text-muted)] backdrop-blur-sm hover:bg-white/10 hover:text-white transition-colors cursor-default"
+                  >
+                    {tool}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Scroll indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+          <div className="w-5 h-8 rounded-full border border-white/20 flex items-start justify-center p-1">
+            <div className="w-1 h-2 rounded-full bg-white/40" />
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════ */}
+      {/* WORK SECTION — Portfolio Grid */}
+      {/* ═══════════════════════════════════════════ */}
+      <section id="work" className="py-16 sm:py-24">
+        {/* Category Taskbar - Full Window Width */}
+        <div className="w-full mb-8 sm:mb-12">
+          <CategoryFilter
+            categories={[...CATEGORIES]}
+            active={activeCategory}
+            onChange={setActiveCategory}
+          />
+        </div>
+
+        <div className="w-full px-4 sm:px-6">
+          {/* Section header */}
+          <div className="flex items-center justify-between mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold font-[family-name:var(--font-display)]">
+            </h2>
+            <p className="text-sm text-[var(--color-text-muted)] mt-1">
+              {projects.length} projects
+            </p>
+          </div>
+
+          {/* Video Grid */}
+          {filteredProjects.length === 0 ? (
+            <div className="text-center py-20">
+              <p className="text-[var(--color-text-muted)]">No projects in this category yet</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-5">
+              {filteredProjects.map((project) => (
+                <VideoCard
+                  key={project.id}
+                  title={project.title}
+                  category={project.category}
+                  videoUrl={project.videoUrl}
+                  thumbnailUrl={project.thumbnailUrl}
+                  aspectRatio={project.aspectRatio}
+                  featured={project.featured}
+                  onClick={() =>
+                    setLightbox({ url: project.videoUrl, title: project.title })
+                  }
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════ */}
+      {/* BEFORE / AFTER SECTION */}
+      {/* ═══════════════════════════════════════════ */}
+      {beforeAfterProjects.length > 0 && (
+        <section className="py-16 sm:py-24 bg-[var(--color-surface-950)]">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-10 sm:mb-14">
+              <h2 className="text-2xl sm:text-3xl font-bold font-[family-name:var(--font-display)]">
+                Before & After
+              </h2>
+              <p className="text-sm text-[var(--color-text-muted)] mt-2 max-w-md mx-auto">
+                Drag the slider to see the transformation
+              </p>
+            </div>
+
+            <div className="space-y-8">
+              {beforeAfterProjects.map((project) => (
+                <div key={project.id} className="space-y-3">
+                  <BeforeAfterSlider
+                    beforeSrc={project.beforeUrl!}
+                    afterSrc={project.afterUrl!}
+                    isVideo={
+                      project.beforeUrl!.match(/\.(mp4|webm|mov)$/i) !== null
+                    }
+                    className="aspect-video"
+                  />
+                  <p className="text-sm text-[var(--color-text-muted)] text-center font-[family-name:var(--font-display)]">
+                    {project.title}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+
+
+      {/* ═══════════════════════════════════════════ */}
+      {/* CONTACT SECTION */}
+      {/* ═══════════════════════════════════════════ */}
+      <section id="contact" className="py-16 sm:py-24 relative overflow-hidden">
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-[var(--color-surface-900)] to-black" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--color-accent-500)_0%,_transparent_60%)] opacity-[0.03]" />
+
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-[family-name:var(--font-display)] leading-tight">
+            Let&apos;s Create
+            <br />
+            <span className="gradient-text">Something Amazing</span>
+          </h2>
+          <p className="text-center text-sm text-[var(--color-text-muted)] mt-4 max-w-md mx-auto">
+            Got a project in mind? I&apos;d love to hear about it. Let&apos;s bring your vision to life.
+          </p>
+
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+            {settings?.contactEmail && (
+              <a
+                href={`mailto:${settings.contactEmail}`}
+                className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full text-sm font-medium text-white bg-white/10 hover:bg-white/15 border border-white/20 hover:border-white/35 backdrop-blur-md shadow-lg shadow-black/50 transition-all duration-300 active:scale-[0.97]"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                  <polyline points="22,6 12,13 2,6" />
+                </svg>
+                Get in Touch
+              </a>
+            )}
+
+          </div>
+        </div>
+      </section>
+
+      {/* Lightbox */}
+      <VideoLightbox
+        isOpen={!!lightbox}
+        onClose={() => setLightbox(null)}
+        videoUrl={lightbox?.url || ""}
+        title={lightbox?.title}
+      />
+    </>
+  );
+}
