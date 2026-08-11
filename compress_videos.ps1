@@ -30,11 +30,4 @@ foreach ($folder in $folders.GetEnumerator()) {
         $process = Start-Process -FilePath "ffmpeg" -ArgumentList $ffmpegArgs -Wait -NoNewWindow -PassThru
         
         if ($process.ExitCode -eq 0) {
-            Write-Host "Successfully compressed $($video.Name)" -ForegroundColor Green
-        } else {
-            Write-Host "Failed to compress $($video.Name)" -ForegroundColor Red
-        }
-    }
-}
-
-Write-Host "All videos processed."
+            Write-Host "Successfully compressed $($video.Name)" -ForegroundColor Greens
