@@ -47,7 +47,11 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
 
   const filteredProjects =
     activeCategory === "all"
-      ? projects
+      ? [...projects].sort((a, b) => {
+          if (a.category === "shortforms" && b.category !== "shortforms") return -1;
+          if (a.category !== "shortforms" && b.category === "shortforms") return 1;
+          return 0;
+        })
       : projects.filter((p) => p.category === activeCategory);
 
   const heroTitle = settings?.heroTitle || "Video Editor & Motion Designer";
