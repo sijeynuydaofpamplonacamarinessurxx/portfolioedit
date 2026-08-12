@@ -31,7 +31,7 @@ export function formatFileSize(bytes: number): string {
 
 export const CATEGORIES = [
   { value: "cinematic", label: "Cinematic" },
-  { value: "experiments", label: "AMV" },
+  { value: "experiments", label: "Creative" },
   { value: "shortforms", label: "Shortforms" },
 ] as const;
 

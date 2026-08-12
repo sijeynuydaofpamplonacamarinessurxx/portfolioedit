@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
+import { CATEGORIES } from "@/lib/utils";
 
 interface VideoCardProps {
   title: string;
@@ -111,7 +112,7 @@ export default function VideoCard({
         {/* Category badge */}
         <div className="absolute top-2.5 left-2.5 z-10">
           <span className="text-[9px] font-medium uppercase tracking-[0.15em] px-2 py-1 rounded-[var(--radius-sm)] bg-black/50 backdrop-blur-sm text-white/80">
-            {category}
+            {CATEGORIES.find(c => c.value === category)?.label || category}
           </span>
         </div>
 

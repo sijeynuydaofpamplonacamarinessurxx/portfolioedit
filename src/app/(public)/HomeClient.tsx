@@ -38,6 +38,12 @@ interface HomeClientProps {
 export default function HomeClient({ projects, beforeAfterProjects, settings }: HomeClientProps) {
   const [activeCategory, setActiveCategory] = useState("all");
   const [lightbox, setLightbox] = useState<{ url: string; title: string } | null>(null);
+  const [activeContact, setActiveContact] = useState<"email" | "instagram" | "discord" | "tiktok" | "whatsapp" | null>(null);
+
+  const toggleContact = (contact: "email" | "instagram" | "discord" | "tiktok" | "whatsapp", e: React.MouseEvent) => {
+    e.preventDefault();
+    setActiveContact(prev => prev === contact ? null : contact);
+  };
 
   const filteredProjects =
     activeCategory === "all"
@@ -87,33 +93,112 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
           <div className="md:hidden h-px w-full max-w-xs bg-gradient-to-r from-transparent via-white/40 to-transparent my-4"></div>
 
           {/* Right: Description */}
-          <div className="max-w-xl text-center md:text-left">
-            <div className="space-y-4 text-sm sm:text-base text-[var(--color-text-secondary)] leading-relaxed">
-              <p>
-                I&apos;m a video editor and motion designer specializing in storytelling,
-                AMV edits, and shortform content that captivates audiences.
-              </p>
-              <p>
-                With a keen eye for pacing, color grading, and visual effects, I transform
-                raw footage into polished, emotionally resonant pieces that leave lasting impressions.
-              </p>
-              <p className="italic text-white/70">
-                Every frame is intentional. Every cut serves the story.
-              </p>
-            </div>
-            
-            {/* Tools */}
-            <div className="pt-8 flex flex-col items-center md:items-start">
-              <p className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-[0.2em] mb-3">Tools</p>
-              <div className="flex flex-wrap justify-center md:justify-start gap-2">
-                {["DaVinci Resolve"].map((tool) => (
-                  <span
-                    key={tool}
-                    className="text-[11px] px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[var(--color-text-muted)] backdrop-blur-sm hover:bg-white/10 hover:text-white transition-colors cursor-default"
+          <div className="max-w-xl w-full rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md shadow-2xl overflow-hidden">
+            <div style={{ padding: '1.75rem' }}>
+              <div style={{ fontFamily: 'var(--font-space), sans-serif', lineHeight: '1.6', color: '#F5F5F7', textAlign: 'left' }} className="space-y-5 text-sm sm:text-[15px]">
+                <p>
+                  I&apos;m a <strong style={{ fontWeight: 700 }}>video editor</strong> and <strong style={{ fontWeight: 700 }}>motion designer</strong> specializing in storytelling,
+                  creative edits, and shortform content that captivates audiences.
+                </p>
+                <p>
+                  With a keen eye for pacing, color grading, and visual effects, I transform
+                  raw footage into polished, emotionally resonant pieces that leave lasting impressions.
+                </p>
+                <p style={{ fontStyle: 'italic', color: 'rgba(255, 255, 255, 0.75)' }}>
+                  Every frame is intentional. Every cut serves the story.
+                </p>
+              </div>
+              
+              {/* Tools */}
+              <div className="flex flex-col items-start border-t border-white/10" style={{ marginTop: '1.25rem', paddingTop: '0.75rem', paddingBottom: '0.5rem', marginBottom: '0.5rem' }}>
+                <p className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-[0.2em] mb-10">Tools</p>
+                <div className="flex flex-wrap justify-start gap-3">
+                  <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-colors flex items-center justify-center cursor-default overflow-hidden">
+                    <img src="/assets/DAVINCILOGO.png" alt="DaVinci Resolve" className="w-8 h-8 object-contain grayscale contrast-125 brightness-150 opacity-80" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Contacts */}
+              <div className="flex flex-col items-start border-t border-white/10" style={{ paddingTop: '0.75rem', marginTop: '0.5rem', paddingBottom: '0.5rem' }}>
+                <p className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-[0.2em] mb-3">Contacts</p>
+                <div className="flex flex-wrap justify-start gap-3">
+                  {/* Email - no link, just text */}
+                  <div
+                    onClick={(e) => toggleContact("email", e)}
+                    className={`relative rounded-full bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300 flex items-center cursor-pointer overflow-hidden ${activeContact === 'email' ? 'w-auto' : 'w-12'} h-12`}
+                    style={activeContact === 'email' ? { paddingRight: '1.5rem' } : {}}
                   >
-                    {tool}
-                  </span>
-                ))}
+                    <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
+                      <img src="/assets/email i con.png" alt="Email" className="w-7 h-7 object-contain brightness-0 invert opacity-70" />
+                    </div>
+                    <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeContact === 'email' ? 'max-w-xs opacity-100' : 'max-w-0 opacity-0'}`}>
+                      <span className="ml-4 text-[11px] text-[var(--color-text-muted)] whitespace-nowrap">
+                        sijeynuyda@gmail.com
+                      </span>
+                    </div>
+                  </div>
+                  {/* Instagram - hyperlinked */}
+                  <div
+                    onClick={(e) => toggleContact("instagram", e)}
+                    className={`relative rounded-full bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300 flex items-center cursor-pointer overflow-hidden ${activeContact === 'instagram' ? 'w-auto' : 'w-12'} h-12`}
+                    style={activeContact === 'instagram' ? { paddingRight: '1.5rem' } : {}}
+                  >
+                    <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
+                      <img src="/assets/igicon.webp" alt="Instagram" className="w-8 h-8 object-contain grayscale contrast-125 brightness-150 opacity-80" />
+                    </div>
+                    <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeContact === 'instagram' ? 'max-w-xs opacity-100' : 'max-w-0 opacity-0'}`}>
+                      <a href="https://instagram.com/_siijeeyyyy" target="_blank" rel="noopener noreferrer" className="ml-4 text-[11px] text-[var(--color-text-muted)] hover:text-white underline whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                        @_siijeeyyyy
+                      </a>
+                    </div>
+                  </div>
+                  {/* TikTok - hyperlinked */}
+                  <div
+                    onClick={(e) => toggleContact("tiktok", e)}
+                    className={`relative rounded-full bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300 flex items-center cursor-pointer overflow-hidden ${activeContact === 'tiktok' ? 'w-auto' : 'w-12'} h-12`}
+                    style={activeContact === 'tiktok' ? { paddingRight: '1.5rem' } : {}}
+                  >
+                    <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
+                      <img src="/assets/tiktoklogo.webp" alt="TikTok" className="w-7 h-7 object-contain grayscale contrast-125 brightness-150 opacity-80" />
+                    </div>
+                    <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeContact === 'tiktok' ? 'max-w-xs opacity-100' : 'max-w-0 opacity-0'}`}>
+                      <a href="https://www.tiktok.com/@selponniyuna" target="_blank" rel="noopener noreferrer" className="ml-4 text-[11px] text-[var(--color-text-muted)] hover:text-white underline whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                        @selponniyuna
+                      </a>
+                    </div>
+                  </div>
+                  {/* Discord - no link, just text */}
+                  <div
+                    onClick={(e) => toggleContact("discord", e)}
+                    className={`relative rounded-full bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300 flex items-center cursor-pointer overflow-hidden ${activeContact === 'discord' ? 'w-auto' : 'w-12'} h-12`}
+                    style={activeContact === 'discord' ? { paddingRight: '1.5rem' } : {}}
+                  >
+                    <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
+                      <img src="/assets/discord logo.webp" alt="Discord" className="w-7 h-7 object-contain grayscale contrast-125 brightness-150 opacity-80" />
+                    </div>
+                    <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeContact === 'discord' ? 'max-w-xs opacity-100' : 'max-w-0 opacity-0'}`}>
+                      <span className="ml-4 text-[11px] text-[var(--color-text-muted)] whitespace-nowrap">
+                        sijey2654
+                      </span>
+                    </div>
+                  </div>
+                  {/* WhatsApp - no link, just text */}
+                  <div
+                    onClick={(e) => toggleContact("whatsapp", e)}
+                    className={`relative rounded-full bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300 flex items-center cursor-pointer overflow-hidden ${activeContact === 'whatsapp' ? 'w-auto' : 'w-12'} h-12`}
+                    style={activeContact === 'whatsapp' ? { paddingRight: '1.5rem' } : {}}
+                  >
+                    <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
+                      <img src="/assets/whatsapp-white-icon.webp" alt="WhatsApp" className="w-7 h-7 object-contain brightness-0 invert opacity-70" />
+                    </div>
+                    <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeContact === 'whatsapp' ? 'max-w-xs opacity-100' : 'max-w-0 opacity-0'}`}>
+                      <span className="ml-4 text-[11px] text-[var(--color-text-muted)] whitespace-nowrap">
+                        +639274423204
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -217,6 +302,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
       {/* ═══════════════════════════════════════════ */}
       {/* CONTACT SECTION */}
       {/* ═══════════════════════════════════════════ */}
+      <div className="h-48 sm:h-80 w-full" aria-hidden="true" />
       <section id="contact" className="py-16 sm:py-24 relative overflow-hidden w-full flex flex-col items-center justify-center">
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-b from-black via-[var(--color-surface-900)] to-black" />

@@ -5,9 +5,8 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
+  { href: "/", label: "About" },
   { href: "#work", label: "Work" },
-  { href: "#about", label: "About" },
-  { href: "#contact", label: "Contact" },
 ];
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
@@ -37,7 +36,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             href="/"
             className="text-xl sm:text-2xl font-bold font-[family-name:var(--font-display)] tracking-tight hover:opacity-80 transition-opacity z-50"
           >
-            sijey<span className="text-[var(--color-accent-400)]">.</span>
+            s<span className="text-[var(--color-accent-400)]">.</span>
           </Link>
 
           {/* Desktop Nav */}
@@ -59,7 +58,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             onClick={() => setMenuOpen(!menuOpen)}
             className="sm:hidden p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               {menuOpen ? (
                 <path d="M18 6L6 18M6 6l12 12" />
               ) : (
