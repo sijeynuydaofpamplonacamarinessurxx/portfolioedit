@@ -15,9 +15,10 @@ const FALLBACK_PROJECTS = [
   { id: "e3", title: "FINAL - ready for enhance", slug: "experiments-final-ready-for-enhance", category: "experiments", videoUrl: "/videos/experiments/FINAL - ready for enhance.mp4", thumbnailUrl: null, aspectRatio: "16:9", featured: false, sortOrder: 5, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
   { id: "e4", title: "FINALTANGINA", slug: "experiments-finaltangina", category: "experiments", videoUrl: "/videos/experiments/FINALTANGINA.mp4", thumbnailUrl: null, aspectRatio: "16:9", featured: false, sortOrder: 6, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
   { id: "e5", title: "final_yarn", slug: "experiments-final-yarn", category: "experiments", videoUrl: "/videos/experiments/final_yarn.mp4", thumbnailUrl: null, aspectRatio: "16:9", featured: false, sortOrder: 7, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
+  { id: "e6", title: "withflicker", slug: "experiments-withflicker", category: "experiments", videoUrl: "/videos/experiments/withflicker.mp4", thumbnailUrl: null, aspectRatio: "16:9", featured: false, sortOrder: 8, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
   // Shortforms
-  { id: "s1", title: "1080p - FULL EDIT TRIAL", slug: "shortforms-1080p-full-edit-trial", category: "shortforms", videoUrl: "/videos/shortforms/1080p - FULL EDIT TRIAL.mp4", thumbnailUrl: null, aspectRatio: "9:16", featured: false, sortOrder: 8, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
-  { id: "s2", title: "FINAL5", slug: "shortforms-final5", category: "shortforms", videoUrl: "/videos/shortforms/FINAL5.mp4", thumbnailUrl: null, aspectRatio: "9:16", featured: false, sortOrder: 9, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
+  { id: "s1", title: "1080p - FULL EDIT TRIAL", slug: "shortforms-1080p-full-edit-trial", category: "shortforms", videoUrl: "/videos/shortforms/1080p - FULL EDIT TRIAL.mp4", thumbnailUrl: null, aspectRatio: "9:16", featured: false, sortOrder: 9, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
+  { id: "s2", title: "FINAL5", slug: "shortforms-final5", category: "shortforms", videoUrl: "/videos/shortforms/FINAL5.mp4", thumbnailUrl: null, aspectRatio: "9:16", featured: false, sortOrder: 10, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
 ];
 
 export default async function HomePage() {
