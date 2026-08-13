@@ -68,7 +68,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
       {/* ═══════════════════════════════════════════ */}
       {/* HERO SECTION */}
       {/* ═══════════════════════════════════════════ */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-screen flex flex-col items-center justify-start md:justify-center pt-28 sm:pt-36 pb-32 sm:pb-40 overflow-hidden">
         {/* Background video */}
         <video
           src={settings?.showreelUrl || "/videos/about-me-bg.mp4"}
@@ -83,7 +83,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black" />
 
         {/* Content */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-0 sm:px-6 lg:px-8 py-20 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16">
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-0 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16" style={{ paddingTop: '2.5rem' }}>
           {/* Left: Logo */}
           <div className="text-center md:text-left">
             <h1 className="text-[20vw] sm:text-[15vw] md:text-[6rem] lg:text-[10rem] font-bold font-[family-name:var(--font-display)] tracking-tighter text-white uppercase leading-none">
@@ -99,11 +99,11 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
           <div className="md:hidden h-px w-full max-w-xs bg-gradient-to-r from-transparent via-white/40 to-transparent my-4"></div>
 
           {/* Right: Description */}
-          <div className="max-w-xl w-[calc(100%-2.5rem)] sm:w-full mx-auto rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md shadow-2xl overflow-hidden">
+          <div className="max-w-xl w-[calc(100%-2.5rem)] sm:w-full mx-auto rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md shadow-2xl overflow-hidden mb-20 md:mb-0">
             <div style={{ padding: '1.75rem' }}>
               <div style={{ fontFamily: 'var(--font-space), sans-serif', lineHeight: '1.6', color: '#F5F5F7', textAlign: 'left' }} className="space-y-5 text-sm sm:text-[15px]">
                 <p>
-                  I&apos;m a <strong style={{ fontWeight: 700 }}>video editor</strong> and <strong style={{ fontWeight: 700 }}>motion designer</strong> specializing in storytelling,
+                  I&apos;m a <strong style={{ fontWeight: 700, color: 'var(--color-accent-500)' }}>video editor</strong> and <strong style={{ fontWeight: 700, color: 'var(--color-accent-500)' }}>motion designer</strong> specializing in storytelling,
                   creative edits, and shortform content that captivates audiences.
                 </p>
                 <p>
@@ -111,7 +111,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
                   raw footage into polished, emotionally resonant pieces that leave lasting impressions.
                 </p>
                 <p>
-                  Beyond the technical execution, my priority is deeply <strong style={{ fontWeight: 700 }}>understanding your unique needs and delivering tailored visual solutions that will solve your problems.</strong>
+                  Beyond the technical execution, my priority is deeply <strong style={{ fontWeight: 700, color: 'var(--color-accent-500)' }}>understanding your unique needs and delivering tailored visual solutions that will solve your problems.</strong>
                 </p>
               </div>
               
@@ -260,10 +260,13 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
         </div>
       </section>
 
+      {/* Explicit Spacer between Hero and Work Section */}
+      <div className="h-16 sm:h-24 w-full pointer-events-none" aria-hidden="true" />
+
       {/* ═══════════════════════════════════════════ */}
       {/* WORK SECTION — Portfolio Grid */}
       {/* ═══════════════════════════════════════════ */}
-      <section id="work" className="py-16 sm:py-24">
+      <section id="work" className="pt-8 sm:pt-16 pb-16 sm:pb-24">
         {/* Category Taskbar - Full Window Width */}
         <div className="w-full mb-8 sm:mb-12">
           <CategoryFilter
@@ -350,13 +353,13 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
       {/* ═══════════════════════════════════════════ */}
       {/* CONTACT SECTION */}
       {/* ═══════════════════════════════════════════ */}
-      <div className="h-48 sm:h-80 w-full" aria-hidden="true" />
-      <section id="contact" className="py-16 sm:py-24 relative overflow-hidden w-full flex flex-col items-center justify-center">
+      <div className="h-24 sm:h-40 w-full" aria-hidden="true" />
+      <section id="contact" className="pt-12 sm:pt-16 pb-32 sm:pb-48 relative overflow-hidden w-full flex flex-col items-center justify-center">
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-b from-black via-[var(--color-surface-900)] to-black" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--color-accent-500)_0%,_transparent_60%)] opacity-[0.03]" />
 
-        <div className="relative w-full max-w-3xl mx-auto px-6 sm:px-8 lg:px-12 flex flex-col items-center justify-center text-center">
+        <div className="relative w-full max-w-3xl mx-auto px-6 sm:px-8 lg:px-12 flex flex-col items-center justify-center text-center pb-16 sm:pb-24">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-[family-name:var(--font-display)] leading-tight text-center w-full">
             Let&apos;s Create
             <br />
@@ -383,6 +386,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
           </div>
         </div>
       </section>
+      <div className="h-20 sm:h-32 w-full pointer-events-none" aria-hidden="true" />
 
       {/* Lightbox */}
       <VideoLightbox
