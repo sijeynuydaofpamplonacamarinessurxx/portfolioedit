@@ -105,8 +105,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
                   raw footage into polished, emotionally resonant pieces that leave lasting impressions.
                 </p>
                 <p>
-                  Beyond the technical execution, my priority is deeply understanding your unique needs
-                  and delivering tailored visual solutions that solve your creative challenges.
+                  Beyond the technical execution, my priority is deeply <strong style={{ fontWeight: 700 }}>understanding your unique needs and delivering tailored visual solutions that will solve your problems.</strong>
                 </p>
               </div>
               
