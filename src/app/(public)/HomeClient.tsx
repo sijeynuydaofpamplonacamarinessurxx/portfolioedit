@@ -39,10 +39,16 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
   const [activeCategory, setActiveCategory] = useState("all");
   const [lightbox, setLightbox] = useState<{ url: string; title: string } | null>(null);
   const [activeContact, setActiveContact] = useState<"email" | "instagram" | "discord" | "tiktok" | "whatsapp" | null>(null);
+  const [activeTool, setActiveTool] = useState<"davinci" | "epidemic" | "ocular" | null>(null);
 
   const toggleContact = (contact: "email" | "instagram" | "discord" | "tiktok" | "whatsapp", e: React.MouseEvent) => {
     e.preventDefault();
     setActiveContact(prev => prev === contact ? null : contact);
+  };
+
+  const toggleTool = (tool: "davinci" | "epidemic" | "ocular", e: React.MouseEvent) => {
+    e.preventDefault();
+    setActiveTool(prev => prev === tool ? null : tool);
   };
 
   const filteredProjects =
@@ -109,19 +115,61 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
                 </p>
               </div>
               
-              {/* Tools */}
+              {/* Tools & Resources */}
               <div className="flex flex-col items-start border-t border-white/10" style={{ marginTop: '1.25rem', paddingTop: '0.75rem', paddingBottom: '0.5rem', marginBottom: '0.5rem' }}>
-                <p style={{ fontFamily: 'var(--font-space), sans-serif', color: '#F5F5F7' }} className="text-[10px] font-normal uppercase tracking-[0.2em] mb-3">Tools</p>
+                <p style={{ fontFamily: 'var(--font-space), sans-serif', color: '#F5F5F7', marginBottom: '0.65rem' }} className="text-[10px] font-normal uppercase tracking-[0.2em]">Tools &amp; Resources</p>
                 <div className="flex flex-wrap justify-start gap-3">
-                  <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-colors flex items-center justify-center cursor-default overflow-hidden">
-                    <img src="/assets/DAVINCILOGO.png" alt="DaVinci Resolve" className="w-8 h-8 object-contain grayscale contrast-125 brightness-150 opacity-80" />
+                  {/* DaVinci Resolve */}
+                  <div
+                    onClick={(e) => toggleTool("davinci", e)}
+                    className={`relative rounded-full bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300 flex items-center cursor-pointer overflow-hidden ${activeTool === 'davinci' ? 'w-auto' : 'w-12'} h-12`}
+                    style={activeTool === 'davinci' ? { paddingRight: '1.5rem' } : {}}
+                  >
+                    <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
+                      <img src="/assets/DAVINCILOGO.png" alt="DaVinci Resolve" className="w-8 h-8 object-contain grayscale contrast-125 brightness-150 opacity-80" />
+                    </div>
+                    <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeTool === 'davinci' ? 'max-w-xs opacity-100' : 'max-w-0 opacity-0'}`}>
+                      <span className="ml-4 text-[11px] text-white/90 whitespace-nowrap">
+                        DaVinci Resolve
+                      </span>
+                    </div>
+                  </div>
+                  {/* Epidemic Sound */}
+                  <div
+                    onClick={(e) => toggleTool("epidemic", e)}
+                    className={`relative rounded-full bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300 flex items-center cursor-pointer overflow-hidden ${activeTool === 'epidemic' ? 'w-auto' : 'w-12'} h-12`}
+                    style={activeTool === 'epidemic' ? { paddingRight: '1.5rem' } : {}}
+                  >
+                    <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
+                      <img src="/assets/epidemic-sounds.png" alt="Epidemic Sound" className="w-8 h-8 object-contain grayscale contrast-125 brightness-150 opacity-80" />
+                    </div>
+                    <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeTool === 'epidemic' ? 'max-w-xs opacity-100' : 'max-w-0 opacity-0'}`}>
+                      <span className="ml-4 text-[11px] text-white/90 whitespace-nowrap">
+                        Epidemic Sound
+                      </span>
+                    </div>
+                  </div>
+                  {/* Ocular Sounds */}
+                  <div
+                    onClick={(e) => toggleTool("ocular", e)}
+                    className={`relative rounded-full bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300 flex items-center cursor-pointer overflow-hidden ${activeTool === 'ocular' ? 'w-auto' : 'w-12'} h-12`}
+                    style={activeTool === 'ocular' ? { paddingRight: '1.5rem' } : {}}
+                  >
+                    <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
+                      <img src="/assets/ocular-sounds.png" alt="Ocular Sounds" className="w-10 h-10 object-contain grayscale contrast-125 brightness-150 opacity-80 scale-125" />
+                    </div>
+                    <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeTool === 'ocular' ? 'max-w-xs opacity-100' : 'max-w-0 opacity-0'}`}>
+                      <span className="ml-4 text-[11px] text-white/90 whitespace-nowrap">
+                        Ocular Sounds
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Contacts */}
               <div className="flex flex-col items-start border-t border-white/10" style={{ paddingTop: '0.75rem', marginTop: '0.5rem', paddingBottom: '0.5rem' }}>
-                <p style={{ fontFamily: 'var(--font-space), sans-serif', color: '#F5F5F7' }} className="text-[10px] font-normal uppercase tracking-[0.2em] mb-3">Contacts</p>
+                <p style={{ fontFamily: 'var(--font-space), sans-serif', color: '#F5F5F7', marginBottom: '0.65rem' }} className="text-[10px] font-normal uppercase tracking-[0.2em]">Contacts</p>
                 <div className="flex flex-wrap justify-start gap-3">
                   {/* Email - no link, just text */}
                   <div
