@@ -104,8 +104,9 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
                   With a keen eye for pacing, color grading, and visual effects, I transform
                   raw footage into polished, emotionally resonant pieces that leave lasting impressions.
                 </p>
-                <p style={{ fontStyle: 'italic', color: 'rgba(255, 255, 255, 0.75)' }}>
-                  Every frame is intentional. Every cut serves the story.
+                <p>
+                  Beyond the technical execution, my priority is deeply understanding your unique needs
+                  and delivering tailored visual solutions that solve your creative challenges.
                 </p>
               </div>
               
