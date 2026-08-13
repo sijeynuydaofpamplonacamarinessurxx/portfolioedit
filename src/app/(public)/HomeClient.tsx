@@ -63,31 +63,27 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
       {/* HERO SECTION */}
       {/* ═══════════════════════════════════════════ */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Background video / gradient */}
-        {settings?.showreelUrl ? (
-          <video
-            src={settings.showreelUrl}
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="absolute inset-0 w-full h-full object-cover opacity-30"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--color-surface-800)_0%,_black_60%)]" />
-        )}
+        {/* Background video */}
+        <video
+          src={settings?.showreelUrl || "/videos/about-me-bg.mp4"}
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover opacity-40 pointer-events-none"
+        />
 
         {/* Dark overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black" />
 
         {/* Content */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16">
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-0 sm:px-6 lg:px-8 py-20 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16">
           {/* Left: Logo */}
           <div className="text-center md:text-left">
             <h1 className="text-[20vw] sm:text-[15vw] md:text-[6rem] lg:text-[10rem] font-bold font-[family-name:var(--font-display)] tracking-tighter text-white uppercase leading-none">
               SIJEY<span className="text-[var(--color-accent-500)]">.</span>
             </h1>
-            <p className="text-xs sm:text-sm text-[var(--color-text-muted)] uppercase tracking-[0.3em] mt-4">
+            <p className="text-xs sm:text-sm text-white/80 uppercase tracking-[0.3em] mt-4">
               Video Editor, Motion Designer & Storyteller
             </p>
           </div>
@@ -97,7 +93,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
           <div className="md:hidden h-px w-full max-w-xs bg-gradient-to-r from-transparent via-white/40 to-transparent my-4"></div>
 
           {/* Right: Description */}
-          <div className="max-w-xl w-full rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md shadow-2xl overflow-hidden">
+          <div className="max-w-xl w-[calc(100%-2.5rem)] sm:w-full mx-auto rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md shadow-2xl overflow-hidden">
             <div style={{ padding: '1.75rem' }}>
               <div style={{ fontFamily: 'var(--font-space), sans-serif', lineHeight: '1.6', color: '#F5F5F7', textAlign: 'left' }} className="space-y-5 text-sm sm:text-[15px]">
                 <p>
@@ -115,7 +111,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
               
               {/* Tools */}
               <div className="flex flex-col items-start border-t border-white/10" style={{ marginTop: '1.25rem', paddingTop: '0.75rem', paddingBottom: '0.5rem', marginBottom: '0.5rem' }}>
-                <p className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-[0.2em] mb-10">Tools</p>
+                <p style={{ fontFamily: 'var(--font-space), sans-serif', color: '#F5F5F7' }} className="text-[10px] font-normal uppercase tracking-[0.2em] mb-3">Tools</p>
                 <div className="flex flex-wrap justify-start gap-3">
                   <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-colors flex items-center justify-center cursor-default overflow-hidden">
                     <img src="/assets/DAVINCILOGO.png" alt="DaVinci Resolve" className="w-8 h-8 object-contain grayscale contrast-125 brightness-150 opacity-80" />
@@ -125,7 +121,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
 
               {/* Contacts */}
               <div className="flex flex-col items-start border-t border-white/10" style={{ paddingTop: '0.75rem', marginTop: '0.5rem', paddingBottom: '0.5rem' }}>
-                <p className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-[0.2em] mb-3">Contacts</p>
+                <p style={{ fontFamily: 'var(--font-space), sans-serif', color: '#F5F5F7' }} className="text-[10px] font-normal uppercase tracking-[0.2em] mb-3">Contacts</p>
                 <div className="flex flex-wrap justify-start gap-3">
                   {/* Email - no link, just text */}
                   <div
@@ -137,7 +133,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
                       <img src="/assets/email i con.png" alt="Email" className="w-7 h-7 object-contain brightness-0 invert opacity-70" />
                     </div>
                     <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeContact === 'email' ? 'max-w-xs opacity-100' : 'max-w-0 opacity-0'}`}>
-                      <span className="ml-4 text-[11px] text-[var(--color-text-muted)] whitespace-nowrap">
+                      <span className="ml-4 text-[11px] text-white/90 whitespace-nowrap">
                         sijeynuyda@gmail.com
                       </span>
                     </div>
@@ -152,7 +148,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
                       <img src="/assets/igicon.webp" alt="Instagram" className="w-8 h-8 object-contain grayscale contrast-125 brightness-150 opacity-80" />
                     </div>
                     <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeContact === 'instagram' ? 'max-w-xs opacity-100' : 'max-w-0 opacity-0'}`}>
-                      <a href="https://instagram.com/_siijeeyyyy" target="_blank" rel="noopener noreferrer" className="ml-4 text-[11px] text-[var(--color-text-muted)] hover:text-white underline whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                      <a href="https://instagram.com/_siijeeyyyy" target="_blank" rel="noopener noreferrer" className="ml-4 text-[11px] text-white/90 hover:text-white underline whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                         @_siijeeyyyy
                       </a>
                     </div>
@@ -167,7 +163,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
                       <img src="/assets/tiktoklogo.webp" alt="TikTok" className="w-7 h-7 object-contain grayscale contrast-125 brightness-150 opacity-80" />
                     </div>
                     <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeContact === 'tiktok' ? 'max-w-xs opacity-100' : 'max-w-0 opacity-0'}`}>
-                      <a href="https://www.tiktok.com/@selponniyuna" target="_blank" rel="noopener noreferrer" className="ml-4 text-[11px] text-[var(--color-text-muted)] hover:text-white underline whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                      <a href="https://www.tiktok.com/@selponniyuna" target="_blank" rel="noopener noreferrer" className="ml-4 text-[11px] text-white/90 hover:text-white underline whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                         @selponniyuna
                       </a>
                     </div>
@@ -182,7 +178,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
                       <img src="/assets/discord logo.webp" alt="Discord" className="w-7 h-7 object-contain grayscale contrast-125 brightness-150 opacity-80" />
                     </div>
                     <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeContact === 'discord' ? 'max-w-xs opacity-100' : 'max-w-0 opacity-0'}`}>
-                      <span className="ml-4 text-[11px] text-[var(--color-text-muted)] whitespace-nowrap">
+                      <span className="ml-4 text-[11px] text-white/90 whitespace-nowrap">
                         sijey2654
                       </span>
                     </div>
@@ -197,7 +193,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
                       <img src="/assets/whatsapp-white-icon.webp" alt="WhatsApp" className="w-7 h-7 object-contain brightness-0 invert opacity-70" />
                     </div>
                     <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeContact === 'whatsapp' ? 'max-w-xs opacity-100' : 'max-w-0 opacity-0'}`}>
-                      <span className="ml-4 text-[11px] text-[var(--color-text-muted)] whitespace-nowrap">
+                      <span className="ml-4 text-[11px] text-white/90 whitespace-nowrap">
                         +639274423204
                       </span>
                     </div>
@@ -209,10 +205,10 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
         </div>
 
         {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-          <div className="w-5 h-8 rounded-full border border-white/20 flex items-start justify-center p-1">
-            <div className="w-1 h-2 rounded-full bg-white/40" />
-          </div>
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce cursor-pointer">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-white/60 hover:text-white transition-colors">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
         </div>
       </section>
 
@@ -270,7 +266,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
       {/* ═══════════════════════════════════════════ */}
       {beforeAfterProjects.length > 0 && (
         <section className="py-16 sm:py-24 bg-[var(--color-surface-950)]">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-5xl mx-auto px-6 sm:px-8 lg:px-12">
             <div className="text-center mb-10 sm:mb-14">
               <h2 className="text-2xl sm:text-3xl font-bold font-[family-name:var(--font-display)]">
                 Before & After
@@ -312,7 +308,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
         <div className="absolute inset-0 bg-gradient-to-b from-black via-[var(--color-surface-900)] to-black" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--color-accent-500)_0%,_transparent_60%)] opacity-[0.03]" />
 
-        <div className="relative w-full max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-center">
+        <div className="relative w-full max-w-3xl mx-auto px-6 sm:px-8 lg:px-12 flex flex-col items-center justify-center text-center">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-[family-name:var(--font-display)] leading-tight text-center w-full">
             Let&apos;s Create
             <br />
