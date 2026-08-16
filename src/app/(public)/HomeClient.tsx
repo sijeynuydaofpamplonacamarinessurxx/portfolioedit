@@ -38,10 +38,10 @@ interface HomeClientProps {
 export default function HomeClient({ projects, beforeAfterProjects, settings }: HomeClientProps) {
   const [activeCategory, setActiveCategory] = useState("all");
   const [lightbox, setLightbox] = useState<{ url: string; title: string } | null>(null);
-  const [activeContact, setActiveContact] = useState<"email" | "instagram" | "discord" | "tiktok" | "whatsapp" | null>(null);
+  const [activeContact, setActiveContact] = useState<"email" | "discord" | "tiktok" | "whatsapp" | null>(null);
   const [activeTool, setActiveTool] = useState<"davinci" | "epidemic" | "ocular" | null>(null);
 
-  const toggleContact = (contact: "email" | "instagram" | "discord" | "tiktok" | "whatsapp", e: React.MouseEvent) => {
+  const toggleContact = (contact: "email" | "discord" | "tiktok" | "whatsapp", e: React.MouseEvent) => {
     e.preventDefault();
     setActiveContact(prev => prev === contact ? null : contact);
   };
@@ -54,10 +54,10 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
   const filteredProjects =
     activeCategory === "all"
       ? [...projects].sort((a, b) => {
-          if (a.category === "shortforms" && b.category !== "shortforms") return -1;
-          if (a.category !== "shortforms" && b.category === "shortforms") return 1;
-          return 0;
-        })
+        if (a.category === "shortforms" && b.category !== "shortforms") return -1;
+        if (a.category !== "shortforms" && b.category === "shortforms") return 1;
+        return 0;
+      })
       : projects.filter((p) => p.category === activeCategory);
 
   const heroTitle = settings?.heroTitle || "Video Editor & Motion Designer";
@@ -93,7 +93,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
               Video Editor, Motion Designer & Storyteller
             </p>
           </div>
-          
+
           {/* Middle: Line */}
           <div className="hidden md:block w-px h-64 bg-gradient-to-b from-transparent via-white/40 to-transparent"></div>
           <div className="md:hidden h-px w-full max-w-xs bg-gradient-to-r from-transparent via-white/40 to-transparent my-4"></div>
@@ -114,7 +114,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
                   Beyond the technical execution, my priority is deeply <strong style={{ fontWeight: 700, color: 'var(--color-accent-500)' }}>understanding your unique needs and delivering tailored visual solutions that will solve your problems.</strong>
                 </p>
               </div>
-              
+
               {/* Tools & Resources */}
               <div className="flex flex-col items-start border-t border-white/10" style={{ marginTop: '1.25rem', paddingTop: '0.75rem', paddingBottom: '0.5rem', marginBottom: '0.5rem' }}>
                 <p style={{ fontFamily: 'var(--font-space), sans-serif', color: '#F5F5F7', marginBottom: '0.65rem' }} className="text-[10px] font-normal uppercase tracking-[0.2em]">Tools &amp; Resources</p>
@@ -186,21 +186,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
                       </span>
                     </div>
                   </div>
-                  {/* Instagram - hyperlinked */}
-                  <div
-                    onClick={(e) => toggleContact("instagram", e)}
-                    className={`relative rounded-full bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300 flex items-center cursor-pointer overflow-hidden ${activeContact === 'instagram' ? 'w-auto' : 'w-12'} h-12`}
-                    style={activeContact === 'instagram' ? { paddingRight: '1.5rem' } : {}}
-                  >
-                    <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
-                      <img src="/assets/igicon.webp" alt="Instagram" className="w-8 h-8 object-contain grayscale contrast-125 brightness-150 opacity-80" />
-                    </div>
-                    <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeContact === 'instagram' ? 'max-w-xs opacity-100' : 'max-w-0 opacity-0'}`}>
-                      <a href="https://instagram.com/_siijeeyyyy" target="_blank" rel="noopener noreferrer" className="ml-4 text-[11px] text-white/90 hover:text-white underline whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                        @_siijeeyyyy
-                      </a>
-                    </div>
-                  </div>
+
                   {/* TikTok - hyperlinked */}
                   <div
                     onClick={(e) => toggleContact("tiktok", e)}
