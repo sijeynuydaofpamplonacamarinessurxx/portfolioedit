@@ -10,17 +10,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const email = credentials?.email as string;
+        const email = (credentials?.email as string)?.trim();
         const password = credentials?.password as string;
 
+        const expectedEmail = (process.env.ADMIN_EMAIL || "admin@sijey.dev").trim();
+        const expectedPassword = process.env.ADMIN_PASSWORD || "sijey2024!";
+
         if (
-          email === process.env.ADMIN_EMAIL &&
-          password === process.env.ADMIN_PASSWORD
+          email?.toLowerCase() === expectedEmail.toLowerCase() &&
+          password === expectedPassword
         ) {
           return {
             id: "1",
             name: "Admin",
-            email: email,
+            email: expectedEmail,
             role: "admin",
           };
         }
