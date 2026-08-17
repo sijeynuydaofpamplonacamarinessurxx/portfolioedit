@@ -18,6 +18,8 @@ model Project {
   aspectRatio  String   @default("16:9")
   featured     Boolean  @default(false)
   sortOrder    Int      @default(0)
+  creator      String?
+  subcategory  String?
   caseStudy    String?
   beforeUrl    String?
   afterUrl     String?

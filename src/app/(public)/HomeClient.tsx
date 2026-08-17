@@ -17,6 +17,7 @@ interface Project {
   thumbnailUrl: string | null;
   aspectRatio: string;
   featured: boolean;
+  creator?: string | null;
   beforeUrl: string | null;
   afterUrl: string | null;
 }
@@ -76,6 +77,8 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
           muted
           loop
           playsInline
+          controlsList="nodownload"
+          onContextMenu={(e) => e.preventDefault()}
           className="absolute inset-0 w-full h-full object-cover opacity-40 pointer-events-none"
         />
 
@@ -288,6 +291,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
                   thumbnailUrl={project.thumbnailUrl}
                   aspectRatio={project.aspectRatio}
                   featured={project.featured}
+                  creator={project.creator}
                   onClick={() =>
                     setLightbox({ url: project.videoUrl, title: project.title })
                   }

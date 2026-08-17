@@ -72,6 +72,8 @@ export default function VideoLightbox({ isOpen, onClose, videoUrl, title }: Vide
           src={videoUrl}
           controls
           autoPlay
+          controlsList="nodownload"
+          onContextMenu={(e) => e.preventDefault()}
           className="w-full rounded-[var(--radius-lg)] max-h-[85vh] object-contain bg-black"
           playsInline
         />

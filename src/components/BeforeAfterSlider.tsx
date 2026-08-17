@@ -53,7 +53,7 @@ export default function BeforeAfterSlider({
 
   const MediaElement = isVideo ? "video" : "img";
   const mediaProps = isVideo
-    ? { autoPlay: true, muted: true, loop: true, playsInline: true }
+    ? { autoPlay: true, muted: true, loop: true, playsInline: true, controlsList: "nodownload", onContextMenu: (e: React.MouseEvent) => e.preventDefault() }
     : {};
 
   return (
@@ -113,13 +113,13 @@ export default function BeforeAfterSlider({
 
       {/* Labels */}
       <div
-        className="absolute top-3 left-3 text-[10px] font-bold tracking-[0.15em] uppercase px-2 py-1 rounded-[var(--radius-sm)] bg-black/50 backdrop-blur-sm text-white/80 pointer-events-none transition-opacity duration-300"
+        className="absolute top-3 left-3 text-[10px] font-semibold tracking-[0.08em] uppercase px-3.5 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-white/90 shadow-sm pointer-events-none transition-opacity duration-300"
         style={{ opacity: position > 15 ? 1 : 0 }}
       >
         {beforeLabel}
       </div>
       <div
-        className="absolute top-3 right-3 text-[10px] font-bold tracking-[0.15em] uppercase px-2 py-1 rounded-[var(--radius-sm)] bg-black/50 backdrop-blur-sm text-white/80 pointer-events-none transition-opacity duration-300"
+        className="absolute top-3 right-3 text-[10px] font-semibold tracking-[0.08em] uppercase px-3.5 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-white/90 shadow-sm pointer-events-none transition-opacity duration-300"
         style={{ opacity: position < 85 ? 1 : 0 }}
       >
         {afterLabel}

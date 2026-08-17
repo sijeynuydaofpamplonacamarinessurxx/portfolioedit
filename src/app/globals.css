@@ -74,6 +74,46 @@ body {
   overflow-x: hidden;
 }
 
+video {
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* ─── Badge Pill ─── */
+
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px !important;
+  border-radius: 9999px !important;
+  font-size: 9px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  background-color: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4) !important;
+  white-space: nowrap !important;
+}
+
+.badge-pill-creator {
+  font-style: italic !important;
+  color: #ffffff !important;
+}
+
+.badge-pill-category {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.badge-pill-featured {
+  background-color: rgba(20, 184, 166, 0.3) !important;
+  color: #5eead4 !important;
+}
+
 /* ─── Scrollbar ─── */
 
 ::-webkit-scrollbar {

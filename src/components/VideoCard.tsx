@@ -10,6 +10,7 @@ interface VideoCardProps {
   thumbnailUrl?: string | null;
   aspectRatio: string;
   featured?: boolean;
+  creator?: string | null;
   onClick?: () => void;
 }
 
@@ -20,6 +21,7 @@ export default function VideoCard({
   thumbnailUrl,
   aspectRatio,
   featured,
+  creator,
   onClick,
 }: VideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -93,6 +95,8 @@ export default function VideoCard({
               playsInline
               autoPlay
               preload="metadata"
+              controlsList="nodownload"
+              onContextMenu={(e) => e.preventDefault()}
               onLoadedData={() => setIsLoaded(true)}
             />
           </>
@@ -109,17 +113,37 @@ export default function VideoCard({
           </div>
         )}
 
-        {/* Category badge */}
-        <div className="absolute top-2.5 left-2.5 z-10">
-          <span className="text-[9px] font-medium uppercase tracking-[0.15em] px-2 py-1 rounded-[var(--radius-sm)] bg-black/50 backdrop-blur-sm text-white/80">
-            {CATEGORIES.find(c => c.value === category)?.label || category}
-          </span>
-        </div>
+        {/* Category & Creator badges */}
+        {(() => {
+          let activeCreator = creator;
+          if (!activeCreator && title.toLowerCase().includes("1080p")) activeCreator = "joshukzz";
+          if (!activeCreator && (title.toLowerCase().includes("900pc") || title.toLowerCase().includes("nwbuilds"))) activeCreator = "NwBuilds";
+          if (!activeCreator && (category === "cinematic" || title.toLowerCase().includes("luma") || title.toLowerCase().includes("shi-2"))) activeCreator = "imahemakaluma";
+
+          const formattedCreator = activeCreator
+            ? activeCreator.startsWith("@")
+              ? activeCreator
+              : `@${activeCreator}`
+            : null;
+
+          return (
+            <div className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1.5 flex-wrap">
+              <span className="badge-pill badge-pill-category">
+                {CATEGORIES.find(c => c.value === category)?.label || category}
+              </span>
+              {formattedCreator && (
+                <span className="badge-pill badge-pill-creator">
+                  {formattedCreator}
+                </span>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Featured badge */}
         {featured && (
           <div className="absolute top-2.5 right-2.5 z-10">
-            <span className="text-[9px] font-medium uppercase tracking-[0.15em] px-2 py-1 rounded-[var(--radius-sm)] bg-[var(--color-accent-500)]/30 backdrop-blur-sm text-[var(--color-accent-300)]">
+            <span className="badge-pill badge-pill-featured">
               Featured
             </span>
           </div>
