@@ -13,6 +13,12 @@ function slugify(text: string) {
     .replace(/-+$/, '');            // Trim - from end of text
 }
 
+const creatorMap: Record<string, string> = {
+  "PART2-revised2-with subtitles3-final": "deanjoseph__",
+  "1080p - FULL EDIT TRIAL": "joshukzz",
+  "$900PC-FINAL": "NwBuilds",
+};
+
 async function main() {
   const publicVideosPath = path.join(process.cwd(), 'public', 'videos');
   const categories = ['cinematic', 'experiments', 'shortforms'];
@@ -31,6 +37,7 @@ async function main() {
           
           // Determine aspect ratio based on category
           const aspectRatio = category === 'shortforms' ? '9:16' : '16:9';
+          const creator = creatorMap[title] || null;
           
           // Check if it already exists by slug
           const existing = await prisma.project.findUnique({
@@ -46,10 +53,17 @@ async function main() {
                 category,
                 videoUrl,
                 aspectRatio,
+                creator,
               }
             });
           } else {
-            console.log(`Skipping ${title} - already exists.`);
+            console.log(`Skipping/Updating ${title}...`);
+            if (creator && existing.creator !== creator) {
+              await prisma.project.update({
+                where: { slug },
+                data: { creator }
+              });
+            }
           }
         }
       }
