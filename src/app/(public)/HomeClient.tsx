@@ -13,6 +13,7 @@ interface Project {
   slug: string;
   description: string | null;
   category: string;
+  subcategory?: string | null;
   videoUrl: string;
   thumbnailUrl: string | null;
   aspectRatio: string;
@@ -55,9 +56,10 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
   const filteredProjects =
     activeCategory === "all"
       ? [...projects].sort((a, b) => {
-        if (a.category === "shortforms" && b.category !== "shortforms") return -1;
-        if (a.category !== "shortforms" && b.category === "shortforms") return 1;
-        return 0;
+        const order: Record<string, number> = { shortforms: 0, longforms: 1 };
+        const aOrder = order[a.category] ?? 2;
+        const bOrder = order[b.category] ?? 2;
+        return aOrder - bOrder;
       })
       : projects.filter((p) => p.category === activeCategory);
 
@@ -287,6 +289,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
                   key={project.id}
                   title={project.title}
                   category={project.category}
+                  subcategory={project.subcategory}
                   videoUrl={project.videoUrl}
                   thumbnailUrl={project.thumbnailUrl}
                   aspectRatio={project.aspectRatio}

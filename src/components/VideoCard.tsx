@@ -6,6 +6,7 @@ import { CATEGORIES } from "@/lib/utils";
 interface VideoCardProps {
   title: string;
   category: string;
+  subcategory?: string | null;
   videoUrl: string;
   thumbnailUrl?: string | null;
   aspectRatio: string;
@@ -17,6 +18,7 @@ interface VideoCardProps {
 export default function VideoCard({
   title,
   category,
+  subcategory,
   videoUrl,
   thumbnailUrl,
   aspectRatio,
@@ -116,7 +118,6 @@ export default function VideoCard({
         {/* Category & Creator badges */}
         {(() => {
           let activeCreator = creator;
-          if (!activeCreator && title.toLowerCase().includes("1080p")) activeCreator = "joshukzz";
           if (!activeCreator && (title.toLowerCase().includes("900pc") || title.toLowerCase().includes("nwbuilds"))) activeCreator = "NwBuilds";
           if (!activeCreator && (category === "cinematic" || title.toLowerCase().includes("luma") || title.toLowerCase().includes("shi-2"))) activeCreator = "imahemakaluma";
 
@@ -131,6 +132,11 @@ export default function VideoCard({
               <span className="badge-pill badge-pill-category">
                 {CATEGORIES.find(c => c.value === category)?.label || category}
               </span>
+              {subcategory && (
+                <span className="badge-pill badge-pill-category" style={{ opacity: 0.8 }}>
+                  {subcategory}
+                </span>
+              )}
               {formattedCreator && (
                 <span className="badge-pill badge-pill-creator">
                   {formattedCreator}

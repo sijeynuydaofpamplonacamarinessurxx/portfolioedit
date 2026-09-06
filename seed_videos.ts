@@ -17,11 +17,12 @@ const creatorMap: Record<string, string> = {
   "PART2-revised2-with subtitles3-final": "deanjoseph__",
   "1080p - FULL EDIT TRIAL": "joshukzz",
   "$900PC-FINAL": "NwBuilds",
+  "FINAL2": "@mattinvestz",
 };
 
 async function main() {
   const publicVideosPath = path.join(process.cwd(), 'public', 'videos');
-  const categories = ['cinematic', 'experiments', 'shortforms'];
+  const categories = ['cinematic', 'experiments', 'shortforms', 'longforms'];
 
   for (const category of categories) {
     const categoryPath = path.join(publicVideosPath, category);

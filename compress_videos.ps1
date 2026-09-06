@@ -6,6 +6,7 @@ $folders = @{
     "CINEMATIC" = "cinematic"
     "EXPERIMENTS - AMV" = "experiments"
     "SHORTFORMS" = "shortforms"
+    "LONG FORMS" = "longforms"
 }
 
 foreach ($folder in $folders.GetEnumerator()) {
