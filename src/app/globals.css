@@ -256,3 +256,60 @@ video {
 .aspect-square {
   aspect-ratio: 1 / 1;
 }
+
+/* ─── Toast notification ─── */
+
+@keyframes toastSlideUp {
+  0% { opacity: 0; transform: translate(-50%, 20px); }
+  15% { opacity: 1; transform: translate(-50%, 0); }
+  85% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -10px); }
+}
+
+.animate-toast {
+  animation: toastSlideUp 2s ease-in-out forwards;
+}
+
+/* ─── Copy link button on video cards ─── */
+
+.copy-link-btn {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  z-index: 10;
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.2s ease;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.copy-link-btn:hover {
+  background: rgba(20, 184, 166, 0.4);
+  border-color: rgba(20, 184, 166, 0.5);
+  color: #fff;
+  transform: scale(1);
+}
+
+.group:hover .copy-link-btn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* On touch devices, always show the button */
+@media (hover: none) {
+  .copy-link-btn {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

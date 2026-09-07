@@ -5,6 +5,7 @@ import { CATEGORIES } from "@/lib/utils";
 
 interface VideoCardProps {
   title: string;
+  slug: string;
   category: string;
   subcategory?: string | null;
   videoUrl: string;
@@ -13,10 +14,12 @@ interface VideoCardProps {
   featured?: boolean;
   creator?: string | null;
   onClick?: () => void;
+  onCopyLink?: (slug: string) => void;
 }
 
 export default function VideoCard({
   title,
+  slug,
   category,
   subcategory,
   videoUrl,
@@ -25,6 +28,7 @@ export default function VideoCard({
   featured,
   creator,
   onClick,
+  onCopyLink,
 }: VideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -156,6 +160,22 @@ export default function VideoCard({
         )}
 
 
+        {/* Copy link button */}
+        {onCopyLink && (
+          <button
+            className="copy-link-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              onCopyLink(slug);
+            }}
+            title="Copy link to this video"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+            </svg>
+          </button>
+        )}
 
         {/* Hover scale effect (desktop) */}
         <div className="absolute inset-0 bg-[var(--color-accent-500)]/0 group-hover:bg-[var(--color-accent-500)]/5 transition-colors duration-300" />

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import VideoCard from "@/components/VideoCard";
 import VideoLightbox from "@/components/VideoLightbox";
 import CategoryFilter from "@/components/CategoryFilter";
@@ -39,9 +40,57 @@ interface HomeClientProps {
 
 export default function HomeClient({ projects, beforeAfterProjects, settings }: HomeClientProps) {
   const [activeCategory, setActiveCategory] = useState("all");
-  const [lightbox, setLightbox] = useState<{ url: string; title: string } | null>(null);
+  const [lightbox, setLightbox] = useState<{ url: string; title: string; slug: string } | null>(null);
   const [activeContact, setActiveContact] = useState<"email" | "discord" | "tiktok" | "whatsapp" | null>(null);
   const [activeTool, setActiveTool] = useState<"davinci" | "epidemic" | "ocular" | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastKey, setToastKey] = useState(0);
+  const searchParams = useSearchParams();
+
+  // Auto-open lightbox if ?v=slug is in the URL
+  useEffect(() => {
+    const videoSlug = searchParams.get("v");
+    if (videoSlug && projects.length > 0) {
+      const matchedProject = projects.find((p) => p.slug === videoSlug);
+      if (matchedProject) {
+        setLightbox({
+          url: matchedProject.videoUrl,
+          title: matchedProject.title,
+          slug: matchedProject.slug,
+        });
+      }
+    }
+  }, [searchParams, projects]);
+
+  // Copy link handler
+  const handleCopyLink = useCallback(async (slug: string) => {
+    const url = `${window.location.origin}/?v=${slug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      // Fallback for older browsers
+      const textArea = document.createElement("textarea");
+      textArea.value = url;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+    }
+    setToastMessage("Link copied!");
+    setToastKey((k) => k + 1);
+  }, []);
+
+  // Open lightbox and update URL
+  const openLightbox = useCallback((project: Project) => {
+    setLightbox({ url: project.videoUrl, title: project.title, slug: project.slug });
+    window.history.replaceState(null, "", `/?v=${project.slug}`);
+  }, []);
+
+  // Close lightbox and clean URL
+  const closeLightbox = useCallback(() => {
+    setLightbox(null);
+    window.history.replaceState(null, "", "/");
+  }, []);
 
   const toggleContact = (contact: "email" | "discord" | "tiktok" | "whatsapp", e: React.MouseEvent) => {
     e.preventDefault();
@@ -288,6 +337,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
                 <VideoCard
                   key={project.id}
                   title={project.title}
+                  slug={project.slug}
                   category={project.category}
                   subcategory={project.subcategory}
                   videoUrl={project.videoUrl}
@@ -295,9 +345,8 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
                   aspectRatio={project.aspectRatio}
                   featured={project.featured}
                   creator={project.creator}
-                  onClick={() =>
-                    setLightbox({ url: project.videoUrl, title: project.title })
-                  }
+                  onCopyLink={handleCopyLink}
+                  onClick={() => openLightbox(project)}
                 />
               ))}
             </div>
@@ -384,10 +433,26 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
       {/* Lightbox */}
       <VideoLightbox
         isOpen={!!lightbox}
-        onClose={() => setLightbox(null)}
+        onClose={closeLightbox}
         videoUrl={lightbox?.url || ""}
         title={lightbox?.title}
+        slug={lightbox?.slug}
       />
+
+      {/* Toast notification */}
+      {toastMessage && (
+        <div
+          key={toastKey}
+          className="fixed bottom-8 left-1/2 z-[60] animate-toast pointer-events-none"
+        >
+          <div className="flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--color-surface-800)] border border-[var(--color-accent-500)]/30 backdrop-blur-md shadow-lg shadow-black/50">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#14b8a6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            <span className="text-sm text-white/90 font-medium">{toastMessage}</span>
+          </div>
+        </div>
+      )}
     </>
   );
 }

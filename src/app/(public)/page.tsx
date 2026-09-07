@@ -28,6 +28,7 @@ const FALLBACK_PROJECTS = [
   { id: "e4", title: "FINALTANGINA", slug: "experiments-finaltangina", category: "experiments", videoUrl: "/videos/experiments/FINALTANGINA.mp4", thumbnailUrl: null, aspectRatio: "16:9", featured: false, sortOrder: 0, creator: null, subcategory: null, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
   { id: "e5", title: "final_yarn", slug: "experiments-final_yarn", category: "experiments", videoUrl: "/videos/experiments/final_yarn.mp4", thumbnailUrl: null, aspectRatio: "16:9", featured: false, sortOrder: 0, creator: null, subcategory: null, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
   { id: "e6", title: "withflicker", slug: "experiments-withflicker", category: "experiments", videoUrl: "/videos/experiments/withflicker.mp4", thumbnailUrl: null, aspectRatio: "16:9", featured: false, sortOrder: 0, creator: null, subcategory: null, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
+  { id: "e7", title: "SAMPLE3-APPLICATION", slug: "experiments-sample3-application", category: "experiments", videoUrl: "/videos/experiments/SAMPLE3-APPLICATION.mp4", thumbnailUrl: null, aspectRatio: "16:9", featured: false, sortOrder: 0, creator: null, subcategory: null, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
 ];
 
 export default async function HomePage() {
