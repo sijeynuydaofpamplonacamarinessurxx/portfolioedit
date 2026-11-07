@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useLayoutEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import VideoCard from "@/components/VideoCard";
 import VideoLightbox from "@/components/VideoLightbox";
 import CategoryFilter from "@/components/CategoryFilter";
 import BeforeAfterSlider from "@/components/BeforeAfterSlider";
 import { CATEGORIES } from "@/lib/utils";
+import { playPulse } from "@/lib/pulse";
+import { enableSmoothWheel } from "@/lib/smoothWheel";
+import { playCopySound, playOpenSound, playSelectSound } from "@/lib/sound";
 
 interface Project {
   id: string;
@@ -16,6 +19,7 @@ interface Project {
   category: string;
   subcategory?: string | null;
   videoUrl: string;
+  previewUrl?: string | null;
   thumbnailUrl: string | null;
   aspectRatio: string;
   featured: boolean;
@@ -38,14 +42,323 @@ interface HomeClientProps {
   settings: Settings | null;
 }
 
+const BRAND_ICON = "w-7 h-7 object-contain grayscale contrast-125 brightness-150 opacity-80";
+const MONO_ICON = "w-7 h-7 object-contain brightness-0 invert opacity-70";
+
+const TOOLS = [
+  { id: "davinci", label: "DaVinci Resolve", icon: "/assets/DAVINCILOGO.png", iconClassName: "w-8 h-8 object-contain grayscale contrast-125 brightness-150 opacity-80" },
+  { id: "epidemic", label: "Epidemic Sound", icon: "/assets/epidemic-sounds.png", iconClassName: "w-8 h-8 object-contain grayscale contrast-125 brightness-150 opacity-80" },
+  { id: "ocular", label: "Ocular Sounds", icon: "/assets/ocular-sounds.png", iconClassName: "w-10 h-10 object-contain grayscale contrast-125 brightness-150 opacity-80 scale-125" },
+] as const;
+
+const CONTACTS: readonly { id: ContactId; label: string; icon: string; iconClassName: string; value: string; href?: string }[] = [
+  { id: "email", label: "Email", icon: "/assets/email i con.png", iconClassName: MONO_ICON, value: "sijeynuyda@gmail.com" },
+  { id: "tiktok", label: "TikTok", icon: "/assets/tiktoklogo.webp", iconClassName: BRAND_ICON, value: "@selponniyuna", href: "https://www.tiktok.com/@selponniyuna" },
+  { id: "discord", label: "Discord", icon: "/assets/discord logo.webp", iconClassName: BRAND_ICON, value: "sijey2654" },
+  { id: "whatsapp", label: "WhatsApp", icon: "/assets/whatsapp-white-icon.webp", iconClassName: MONO_ICON, value: "+639274423204" },
+];
+
+type ToolId = (typeof TOOLS)[number]["id"];
+type ContactId = "email" | "tiktok" | "discord" | "whatsapp";
+
+interface ExpandPillProps {
+  icon: string;
+  iconClassName: string;
+  label: string;
+  open: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}
+
+function ExpandPill({ icon, iconClassName, label, open, onToggle, children }: ExpandPillProps) {
+  const pillRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // CSS can't transition width to `auto`, so hand it the label's real width
+  useLayoutEffect(() => {
+    const measure = () => {
+      if (pillRef.current && contentRef.current) {
+        pillRef.current.style.setProperty("--label-w", `${contentRef.current.scrollWidth}px`);
+      }
+    };
+    measure();
+    // Web fonts can finish loading after first paint and change the label width
+    document.fonts?.ready.then(measure);
+  }, [children]);
+
+  return (
+    <div ref={pillRef} className="pill" data-pill data-open={open || undefined}>
+      <button type="button" className="pill-icon" onClick={onToggle} aria-expanded={open} aria-label={label}>
+        <img src={icon} alt="" className={iconClassName} draggable={false} />
+      </button>
+      <div className="pill-label" inert={!open}>
+        <div ref={contentRef}>{children}</div>
+      </div>
+    </div>
+  );
+}
+
+// Eased scroll we control ourselves: native smooth scrolling is too quick over long distances
+// and gets switched off entirely by the OS reduced-motion setting.
+function smoothScrollTo(target: HTMLElement | null) {
+  if (!target) return;
+  const start = window.scrollY;
+  const distance = target.getBoundingClientRect().top;
+  // Longer trips get more time, within 700–1300ms
+  const duration = Math.min(1300, Math.max(700, Math.abs(distance) * 0.9));
+  const easeInOutQuart = (t: number) => (t < 0.5 ? 8 * t ** 4 : 1 - (-2 * t + 2) ** 4 / 2);
+  const startTime = performance.now();
+  let frame = 0;
+  // Lets CSS swap expensive effects for cheap ones while everything is moving
+  document.documentElement.dataset.autoScrolling = "";
+
+  // Hand control back the moment the user scrolls themselves
+  const cancel = () => {
+    cancelAnimationFrame(frame);
+    delete document.documentElement.dataset.autoScrolling;
+    window.removeEventListener("wheel", cancel);
+    window.removeEventListener("touchstart", cancel);
+    window.removeEventListener("keydown", cancel);
+  };
+  window.addEventListener("wheel", cancel, { passive: true });
+  window.addEventListener("touchstart", cancel, { passive: true });
+  window.addEventListener("keydown", cancel);
+
+  const step = (now: number) => {
+    const t = Math.min(1, (now - startTime) / duration);
+    // "instant": <html> has scroll-behavior: smooth, which would re-smooth every step
+    window.scrollTo({ top: start + distance * easeInOutQuart(t), behavior: "instant" });
+    if (t < 1) frame = requestAnimationFrame(step);
+    else cancel();
+  };
+  frame = requestAnimationFrame(step);
+}
+
+// Gmail's compose window, already addressed to me with a brief to fill in. A mailto: link
+// depends on the visitor having a desktop mail app set up; this works in any browser.
+const INQUIRY_SUBJECT = "Video editing project inquiry";
+const INQUIRY_BODY = `[Please fill out the details below before sending]
+
+Hi Sijey,
+
+Format (short-form, long-form, cinematic, other):
+
+Goal of the video:
+
+Reference video (if there are any, send me the link):
+
+Where did you find me:
+
+
+---
+A note from Sijey: thanks for reaching out! I'll get back to you as soon as I see your email.`;
+
+function gmailDraftUrl(to: string) {
+  const params = new URLSearchParams({ view: "cm", fs: "1", to, su: INQUIRY_SUBJECT, body: INQUIRY_BODY });
+  return `https://mail.google.com/mail/?${params}`;
+}
+
+function CheckIcon() {
+  return (
+    <svg className="icon-swap-in" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+function CopyIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="9" y="9" width="13" height="13" rx="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  );
+}
+
+function ExternalIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M7 17L17 7M8 7h9v9" />
+    </svg>
+  );
+}
+
 export default function HomeClient({ projects, beforeAfterProjects, settings }: HomeClientProps) {
   const [activeCategory, setActiveCategory] = useState("all");
-  const [lightbox, setLightbox] = useState<{ url: string; title: string; slug: string } | null>(null);
-  const [activeContact, setActiveContact] = useState<"email" | "discord" | "tiktok" | "whatsapp" | null>(null);
-  const [activeTool, setActiveTool] = useState<"davinci" | "epidemic" | "ocular" | null>(null);
+  const [lightbox, setLightbox] = useState<{ url: string; title: string; slug: string; originRect?: DOMRect } | null>(null);
+  const [activeContact, setActiveContact] = useState<ContactId | null>(null);
+  const [activeTool, setActiveTool] = useState<ToolId | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastKey, setToastKey] = useState(0);
   const searchParams = useSearchParams();
+  const glassRef = useRef<HTMLDivElement>(null);
+
+  // Switching straight from one open pill to another: one shrinks while the other grows. With
+  // their usual (different) timings both are briefly narrow, a wrapped pill hops up a line and then
+  // back down. Flag the switch so CSS runs both on one shared curve: the width one gives up is
+  // exactly what the other takes, so the row never briefly has room and nothing rewraps.
+  const switchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const markPillSwitch = () => {
+    const panel = glassRef.current;
+    if (!panel) return;
+    panel.dataset.pillSwitch = "";
+    clearTimeout(switchTimer.current);
+    switchTimer.current = setTimeout(() => delete panel.dataset.pillSwitch, 700);
+  };
+
+  // Opening or closing a pill changes its width over ~0.5s. Partway through, a row can run out
+  // of room and a pill wraps to the next line, which also makes the glass card taller — both in a
+  // single frame. For a moment after each toggle, watch the layout and glide those jumps instead:
+  // wrapped pills slide from their old spot (FLIP), and the card eases to its new height.
+  useEffect(() => {
+    const panel = glassRef.current;
+    const body = panel?.querySelector<HTMLElement>(".hero-panel-body");
+    if (!panel || !body) return;
+    const GLIDE = { duration: 480, easing: "cubic-bezier(0.32, 0.72, 0, 1)" };
+    const pills = [...panel.querySelectorAll<HTMLElement>(".pill")];
+    const last = new Map(pills.map((p) => [p, { x: p.offsetLeft, y: p.offsetTop }]));
+    let naturalHeight = body.offsetHeight; // layout height, unaffected by the card's own animation
+    const until = performance.now() + 900; // covers the pill's width transition and its overshoot
+    let frame = 0;
+
+    const tick = () => {
+      for (const pill of pills) {
+        const prev = last.get(pill)!;
+        const x = pill.offsetLeft;
+        const y = pill.offsetTop;
+        // Smooth growth only nudges neighbours a few px per frame; a wrap moves a pill a whole row
+        if (Math.abs(prev.y - y) > 4 || Math.abs(prev.x - x) > 24) {
+          pill.animate(
+            [{ transform: `translate(${prev.x - x}px, ${prev.y - y}px)` }, { transform: "translate(0, 0)" }],
+            GLIDE
+          );
+        }
+        last.set(pill, { x, y });
+      }
+
+      // The card has no padding of its own, so its natural height is the body's
+      const height = body.offsetHeight;
+      if (Math.abs(height - naturalHeight) > 1) {
+        // Start from the old height, or from the on-screen height if a glide is already running
+        const gliding = panel.getAnimations().some((a) => a.id === "panel-height" && a.playState === "running");
+        const from = gliding ? panel.offsetHeight : naturalHeight;
+        panel.getAnimations().forEach((a) => a.id === "panel-height" && a.cancel());
+        const glide = panel.animate([{ height: `${from}px` }, { height: `${height}px` }], GLIDE);
+        glide.id = "panel-height";
+        naturalHeight = height;
+      }
+
+      if (performance.now() < until) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [activeTool, activeContact]);
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  // Eased, inertial mouse-wheel scrolling so scroll-driven effects glide instead of stepping
+  useEffect(() => enableSmoothWheel(), []);
+
+  // Enlarge the row of project tiles that comes to rest in the middle of the screen, left to
+  // right with a short stagger. A fast scroll flies past several rows at once, so rows only
+  // take focus once scrolling slows to a browsing pace or stops — one row at a time.
+  useEffect(() => {
+    const grid = gridRef.current;
+    if (!grid) return;
+    const SETTLE_MS = 140;
+    const BROWSING_SPEED = 0.6; // px per ms; faster than this is "flying past"
+    let lastRowTop: number | null = null;
+    let lastY = window.scrollY;
+    let lastTime = performance.now();
+    let settleTimer: ReturnType<typeof setTimeout> | undefined;
+    const focusTimers: ReturnType<typeof setTimeout>[] = [];
+
+    // Cards grouped by their untransformed layout position (the scroll effects move them visually)
+    const centreRow = () => {
+      const cards = [...grid.querySelectorAll<HTMLElement>(".video-card")];
+      if (!cards.length) return null;
+      const gridTop = grid.getBoundingClientRect().top - grid.offsetTop;
+      const middle = window.innerHeight / 2;
+      let best: { top: number; distance: number } | null = null;
+      for (const card of cards) {
+        const centre = gridTop + card.offsetTop + card.offsetHeight / 2;
+        const distance = Math.abs(centre - middle);
+        if (!best || distance < best.distance) best = { top: card.offsetTop, distance };
+      }
+      // Only count it as "in focus" if the row is actually near the middle
+      if (!best || best.distance > cards[0].offsetHeight * 0.75) return null;
+      return { top: best.top, cards: cards.filter((c) => c.offsetTop === best.top) };
+    };
+
+    const focusCentreRow = () => {
+      const row = centreRow();
+      if (!row || row.top === lastRowTop) return;
+      lastRowTop = row.top;
+      focusTimers.forEach(clearTimeout);
+      focusTimers.length = 0;
+      // The previous row eases back to normal size; this one grows and stays enlarged
+      grid.querySelectorAll<HTMLElement>(".video-card[data-focused]").forEach((card) => delete card.dataset.focused);
+      row.cards
+        .sort((a, b) => a.offsetLeft - b.offsetLeft)
+        .forEach((card, column) => {
+          focusTimers.push(
+            setTimeout(() => {
+              card.dataset.focused = "";
+            }, column * 80)
+          );
+        });
+    };
+
+    let speed = Infinity;
+    const onScroll = () => {
+      const now = performance.now();
+      const moved = Math.abs(window.scrollY - lastY);
+      if (moved === 0) return;
+      const elapsed = now - lastTime;
+      // After a pause there's no recent sample to measure against, so assume it's a flick;
+      // otherwise smooth the reading so one odd event can't shift focus mid-flick
+      const sample = elapsed > 100 ? Infinity : moved / Math.max(1, elapsed);
+      speed = Number.isFinite(speed) && Number.isFinite(sample) ? speed * 0.6 + sample * 0.4 : sample;
+      lastY = window.scrollY;
+      lastTime = now;
+      clearTimeout(settleTimer);
+      if (speed < BROWSING_SPEED) focusCentreRow();
+      else settleTimer = setTimeout(focusCentreRow, SETTLE_MS);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      clearTimeout(settleTimer);
+      focusTimers.forEach(clearTimeout);
+    };
+  }, [projects, activeCategory]);
+  const heroRef = useRef<HTMLElement>(null);
+  const heroVideoRef = useRef<HTMLVideoElement>(null);
+
+  // Stop the hero's video and ambient effects from rendering while it's scrolled out of view
+  useEffect(() => {
+    const hero = heroRef.current;
+    if (!hero) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        delete hero.dataset.offscreen;
+        heroVideoRef.current?.play().catch(() => {});
+      } else {
+        hero.dataset.offscreen = "";
+        heroVideoRef.current?.pause();
+      }
+    });
+    observer.observe(hero);
+    return () => observer.disconnect();
+  }, []);
+
+  // SVG refraction in backdrop-filter only renders in Chromium; Safari/Firefox (and iOS Chrome, which is WebKit)
+  // keep the plain frosted glass. userAgentData would be cleaner but is missing on plain-http LAN access.
+  useEffect(() => {
+    if (glassRef.current && "chrome" in window && !/CriOS|FxiOS|EdgiOS/.test(navigator.userAgent)) {
+      glassRef.current.dataset.liquid = "";
+    }
+  }, []);
 
   // Auto-open lightbox if ?v=slug is in the URL
   useEffect(() => {
@@ -53,54 +366,99 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
     if (videoSlug && projects.length > 0) {
       const matchedProject = projects.find((p) => p.slug === videoSlug);
       if (matchedProject) {
-        setLightbox({
-          url: matchedProject.videoUrl,
-          title: matchedProject.title,
-          slug: matchedProject.slug,
-        });
+        // Opening from a card also writes ?v= to the URL; keep that lightbox (and its zoom origin)
+        setLightbox((prev) =>
+          prev?.slug === matchedProject.slug
+            ? prev
+            : { url: matchedProject.videoUrl, title: matchedProject.title, slug: matchedProject.slug }
+        );
       }
     }
   }, [searchParams, projects]);
 
-  // Copy link handler
-  const handleCopyLink = useCallback(async (slug: string) => {
-    const url = `${window.location.origin}/?v=${slug}`;
+  // Close an open pill when tapping elsewhere or pressing Escape
+  useEffect(() => {
+    if (!activeTool && !activeContact) return;
+    const close = () => {
+      setActiveTool(null);
+      setActiveContact(null);
+    };
+    const onPointerDown = (e: PointerEvent) => {
+      if (!(e.target as Element).closest("[data-pill]")) close();
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [activeTool, activeContact]);
+
+  const copyText = useCallback(async (text: string, message: string) => {
+    playCopySound(); // first, while still inside the click, so it's instant and allowed to play
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(text);
     } catch {
-      // Fallback for older browsers
+      // Fallback for older browsers and plain-http LAN access
       const textArea = document.createElement("textarea");
-      textArea.value = url;
+      textArea.value = text;
       document.body.appendChild(textArea);
       textArea.select();
       document.execCommand("copy");
       document.body.removeChild(textArea);
     }
-    setToastMessage("Link copied!");
+    setToastMessage(message);
     setToastKey((k) => k + 1);
   }, []);
 
-  // Open lightbox and update URL
-  const openLightbox = useCallback((project: Project) => {
-    setLightbox({ url: project.videoUrl, title: project.title, slug: project.slug });
+  // Copying a contact pulses the tile that was pressed and flips its icon to a check for a moment
+  const [copiedId, setCopiedId] = useState<ContactId | null>(null);
+  const copiedTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const copyContact = (
+    contact: (typeof CONTACTS)[number],
+    tile: HTMLElement | null,
+    e: React.MouseEvent<HTMLElement>
+  ) => {
+    if (tile) playPulse(tile, e);
+    copyText(contact.value, `${contact.label} copied!`);
+    setCopiedId(contact.id);
+    clearTimeout(copiedTimer.current);
+    copiedTimer.current = setTimeout(() => setCopiedId(null), 1600);
+  };
+
+  // Copy link handler
+  const handleCopyLink = useCallback(
+    (slug: string) => copyText(`${window.location.origin}/?v=${slug}`, "Link copied!"),
+    [copyText]
+  );
+
+  // Open lightbox and update URL. From a card, the card pulses first and the player then
+  // zooms out of the card's position (originRect).
+  const openLightbox = useCallback((project: Project, originRect?: DOMRect) => {
+    setLightbox({ url: project.videoUrl, title: project.title, slug: project.slug, originRect });
     window.history.replaceState(null, "", `/?v=${project.slug}`);
   }, []);
+
+  const openFromCard = useCallback(
+    (project: Project, e: React.MouseEvent<HTMLElement>) => {
+      const card = e.currentTarget;
+      playOpenSound();
+      // Its own effect (press + light bloom), distinct from the copy-link ripple
+      playPulse(card, e, { attr: "opening", duration: 800 });
+      // Let the bloom register before the zoom takes over
+      setTimeout(() => openLightbox(project, card.getBoundingClientRect()), 260);
+    },
+    [openLightbox]
+  );
 
   // Close lightbox and clean URL
   const closeLightbox = useCallback(() => {
     setLightbox(null);
     window.history.replaceState(null, "", "/");
   }, []);
-
-  const toggleContact = (contact: "email" | "discord" | "tiktok" | "whatsapp", e: React.MouseEvent) => {
-    e.preventDefault();
-    setActiveContact(prev => prev === contact ? null : contact);
-  };
-
-  const toggleTool = (tool: "davinci" | "epidemic" | "ocular", e: React.MouseEvent) => {
-    e.preventDefault();
-    setActiveTool(prev => prev === tool ? null : tool);
-  };
 
   const filteredProjects =
     activeCategory === "all"
@@ -120,9 +478,11 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
       {/* ═══════════════════════════════════════════ */}
       {/* HERO SECTION */}
       {/* ═══════════════════════════════════════════ */}
-      <section className="relative min-h-screen flex flex-col items-center justify-start md:justify-center pt-28 sm:pt-36 pb-32 sm:pb-40 overflow-hidden">
+      <section ref={heroRef} className="hero relative flex flex-col items-center justify-center overflow-hidden" style={{ padding: 'clamp(4.5rem, 9vh, 7rem) 0 clamp(2rem, 5vh, 4rem)', minHeight: '100svh' }}>
         {/* Background video */}
         <video
+          ref={heroVideoRef}
+          data-hero-video
           src={settings?.showreelUrl || "/videos/about-me-bg.mp4"}
           autoPlay
           muted
@@ -133,30 +493,70 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
           className="absolute inset-0 w-full h-full object-cover opacity-40 pointer-events-none"
         />
 
-        {/* Dark overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black" />
+        {/* Ambient light behind the glass, film grain, and dark overlay */}
+        <div className="hero-orb hero-orb-a" />
+        <div className="hero-orb hero-orb-b" />
+        <div className="hero-grain" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black pointer-events-none" />
+
+        {/* Refraction map for the liquid glass panel */}
+        <svg width="0" height="0" className="absolute" aria-hidden="true">
+          <filter id="liquid-refract" x="0" y="0" width="100%" height="100%" colorInterpolationFilters="sRGB">
+            <feTurbulence type="fractalNoise" baseFrequency="0.006 0.009" numOctaves="2" seed="7" result="noise" />
+            <feGaussianBlur in="noise" stdDeviation="3" result="softNoise" />
+            <feDisplacementMap in="SourceGraphic" in2="softNoise" scale="90" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+        </svg>
 
         {/* Content */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-0 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16" style={{ paddingTop: '2.5rem' }}>
-          {/* Left: Logo */}
-          <div className="text-center md:text-left">
-            <h1 className="text-[20vw] sm:text-[15vw] md:text-[6rem] lg:text-[10rem] font-bold font-[family-name:var(--font-display)] tracking-tighter text-white uppercase leading-none">
-              SIJEY<span className="text-[var(--color-accent-500)]">.</span>
-            </h1>
-            <p className="text-xs sm:text-sm text-white/80 uppercase tracking-[0.3em] mt-4">
-              Video Editor, Motion Designer & Storyteller
-            </p>
+        <div className="hero-content relative z-10 w-full flex flex-col md:flex-row items-center justify-center">
+          {/* Left: Intro */}
+          <div className="flex flex-col items-center md:items-start text-center md:text-left" style={{ gap: '1.25rem', padding: '0 1.25rem' }}>
+            <div className="hero-chip hero-rise" style={{ "--i": 0, "--exit-y": "150px" } as React.CSSProperties}>
+              <span className="hero-chip-dot" />
+              Available for new projects
+            </div>
+            <div>
+              <h1 className="hero-title hero-rise text-[22vw] sm:text-[15vw] md:text-[6rem] lg:text-[10rem] font-bold font-[family-name:var(--font-display)] tracking-tighter uppercase leading-none" style={{ "--i": 1, "--exit-y": "120px" } as React.CSSProperties}>
+                SIJEY<span className="hero-title-dot">.</span>
+              </h1>
+              <p className="hero-subtitle hero-rise text-xs sm:text-sm text-white/70 uppercase tracking-[0.3em]" style={{ "--i": 2, "--exit-y": "95px", marginTop: '1rem' } as React.CSSProperties}>
+                Video Editor, Motion Designer & Storyteller
+              </p>
+            </div>
+            <div className="hero-ctas hero-rise justify-center md:justify-start" style={{ "--i": 3, "--exit-y": "75px", marginTop: '0.5rem' } as React.CSSProperties}>
+              <a
+                href="#work"
+                className="hero-btn hero-btn-primary"
+                onClick={(e) => {
+                  e.preventDefault();
+                  playSelectSound();
+                  smoothScrollTo(document.getElementById("work"));
+                }}
+              >
+                View my work
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </a>
+            </div>
           </div>
 
-          {/* Middle: Line */}
-          <div className="hidden md:block w-px h-64 bg-gradient-to-b from-transparent via-white/40 to-transparent"></div>
-          <div className="md:hidden h-px w-full max-w-xs bg-gradient-to-r from-transparent via-white/40 to-transparent my-4"></div>
-
           {/* Right: Description */}
-          <div className="max-w-xl w-[calc(100%-2.5rem)] sm:w-full mx-auto rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-md shadow-2xl overflow-hidden mb-20 md:mb-0">
-            <div style={{ padding: '1.75rem' }}>
-              <div style={{ fontFamily: 'var(--font-space), sans-serif', lineHeight: '1.6', color: '#F5F5F7', textAlign: 'left' }} className="space-y-5 text-sm sm:text-[15px]">
-                <p>
+          <div
+            ref={glassRef}
+            className="glass-panel hero-panel hero-rise w-[calc(100%-2.5rem)] sm:w-full rounded-[28px] overflow-hidden"
+            style={{ "--i": 4, "--exit-y": "40px" } as React.CSSProperties}
+            onPointerMove={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              e.currentTarget.style.setProperty("--mx", `${e.clientX - rect.left}px`);
+              e.currentTarget.style.setProperty("--my", `${e.clientY - rect.top}px`);
+            }}
+          >
+            <div className="hero-panel-body" style={{ padding: '1.75rem' }}>
+              <p className="panel-label" style={{ marginBottom: '1rem' }}>About me</p>
+              <div style={{ fontFamily: 'var(--font-space), sans-serif', lineHeight: '1.65', color: 'rgba(245, 245, 247, 0.82)', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '0.85rem' }} className="panel-copy text-sm sm:text-[15px]">
+                <p style={{ color: '#F5F5F7' }} className="panel-lead text-[15px] sm:text-base">
                   I&apos;m a <strong style={{ fontWeight: 700, color: 'var(--color-accent-500)' }}>video editor</strong> and <strong style={{ fontWeight: 700, color: 'var(--color-accent-500)' }}>motion designer</strong> specializing in storytelling,
                   creative edits, and shortform content that captivates audiences.
                 </p>
@@ -170,161 +570,89 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
               </div>
 
               {/* Tools & Resources */}
-              <div className="flex flex-col items-start border-t border-white/10" style={{ marginTop: '1.25rem', paddingTop: '0.75rem', paddingBottom: '0.5rem', marginBottom: '0.5rem' }}>
-                <p style={{ fontFamily: 'var(--font-space), sans-serif', color: '#F5F5F7', marginBottom: '0.65rem' }} className="text-[10px] font-normal uppercase tracking-[0.2em]">Tools &amp; Resources</p>
+              <div className="flex flex-col items-stretch" style={{ marginTop: '1.5rem' }}>
+                <p className="panel-label" style={{ marginBottom: '0.75rem' }}>Tools &amp; Resources</p>
                 <div className="flex flex-wrap justify-start gap-3">
-                  {/* DaVinci Resolve */}
-                  <div
-                    onClick={(e) => toggleTool("davinci", e)}
-                    className={`relative rounded-full bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300 flex items-center cursor-pointer overflow-hidden ${activeTool === 'davinci' ? 'w-auto' : 'w-12'} h-12`}
-                    style={activeTool === 'davinci' ? { paddingRight: '1.5rem' } : {}}
-                  >
-                    <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
-                      <img src="/assets/DAVINCILOGO.png" alt="DaVinci Resolve" className="w-8 h-8 object-contain grayscale contrast-125 brightness-150 opacity-80" />
-                    </div>
-                    <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeTool === 'davinci' ? 'max-w-xs opacity-100' : 'max-w-0 opacity-0'}`}>
-                      <span className="ml-4 text-[11px] text-white/90 whitespace-nowrap">
-                        DaVinci Resolve
-                      </span>
-                    </div>
-                  </div>
-                  {/* Epidemic Sound */}
-                  <div
-                    onClick={(e) => toggleTool("epidemic", e)}
-                    className={`relative rounded-full bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300 flex items-center cursor-pointer overflow-hidden ${activeTool === 'epidemic' ? 'w-auto' : 'w-12'} h-12`}
-                    style={activeTool === 'epidemic' ? { paddingRight: '1.5rem' } : {}}
-                  >
-                    <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
-                      <img src="/assets/epidemic-sounds.png" alt="Epidemic Sound" className="w-8 h-8 object-contain grayscale contrast-125 brightness-150 opacity-80" />
-                    </div>
-                    <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeTool === 'epidemic' ? 'max-w-xs opacity-100' : 'max-w-0 opacity-0'}`}>
-                      <span className="ml-4 text-[11px] text-white/90 whitespace-nowrap">
-                        Epidemic Sound
-                      </span>
-                    </div>
-                  </div>
-                  {/* Ocular Sounds */}
-                  <div
-                    onClick={(e) => toggleTool("ocular", e)}
-                    className={`relative rounded-full bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300 flex items-center cursor-pointer overflow-hidden ${activeTool === 'ocular' ? 'w-auto' : 'w-12'} h-12`}
-                    style={activeTool === 'ocular' ? { paddingRight: '1.5rem' } : {}}
-                  >
-                    <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
-                      <img src="/assets/ocular-sounds.png" alt="Ocular Sounds" className="w-10 h-10 object-contain grayscale contrast-125 brightness-150 opacity-80 scale-125" />
-                    </div>
-                    <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeTool === 'ocular' ? 'max-w-xs opacity-100' : 'max-w-0 opacity-0'}`}>
-                      <span className="ml-4 text-[11px] text-white/90 whitespace-nowrap">
-                        Ocular Sounds
-                      </span>
-                    </div>
-                  </div>
+                  {TOOLS.map((tool) => (
+                    <ExpandPill
+                      key={tool.id}
+                      icon={tool.icon}
+                      iconClassName={tool.iconClassName}
+                      label={tool.label}
+                      open={activeTool === tool.id}
+                      onToggle={() => {
+                        playSelectSound();
+                        if (activeTool && activeTool !== tool.id) markPillSwitch();
+                        setActiveTool((prev) => (prev === tool.id ? null : tool.id));
+                      }}
+                    >
+                      <span className="pill-text">{tool.label}</span>
+                    </ExpandPill>
+                  ))}
                 </div>
               </div>
 
               {/* Contacts */}
-              <div className="flex flex-col items-start border-t border-white/10" style={{ paddingTop: '0.75rem', marginTop: '0.5rem', paddingBottom: '0.5rem' }}>
-                <p style={{ fontFamily: 'var(--font-space), sans-serif', color: '#F5F5F7', marginBottom: '0.65rem' }} className="text-[10px] font-normal uppercase tracking-[0.2em]">Contacts</p>
+              <div className="flex flex-col items-stretch" style={{ marginTop: '1.25rem' }}>
+                <p className="panel-label" style={{ marginBottom: '0.75rem' }}>Contacts</p>
                 <div className="flex flex-wrap justify-start gap-3">
-                  {/* Email - no link, just text */}
-                  <div
-                    onClick={(e) => toggleContact("email", e)}
-                    className={`relative rounded-full bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300 flex items-center cursor-pointer overflow-hidden ${activeContact === 'email' ? 'w-auto' : 'w-12'} h-12`}
-                    style={activeContact === 'email' ? { paddingRight: '1.5rem' } : {}}
-                  >
-                    <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
-                      <img src="/assets/email i con.png" alt="Email" className="w-7 h-7 object-contain brightness-0 invert opacity-70" />
-                    </div>
-                    <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeContact === 'email' ? 'max-w-xs opacity-100' : 'max-w-0 opacity-0'}`}>
-                      <span className="ml-4 text-[11px] text-white/90 whitespace-nowrap">
-                        sijeynuyda@gmail.com
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* TikTok - hyperlinked */}
-                  <div
-                    onClick={(e) => toggleContact("tiktok", e)}
-                    className={`relative rounded-full bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300 flex items-center cursor-pointer overflow-hidden ${activeContact === 'tiktok' ? 'w-auto' : 'w-12'} h-12`}
-                    style={activeContact === 'tiktok' ? { paddingRight: '1.5rem' } : {}}
-                  >
-                    <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
-                      <img src="/assets/tiktoklogo.webp" alt="TikTok" className="w-7 h-7 object-contain grayscale contrast-125 brightness-150 opacity-80" />
-                    </div>
-                    <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeContact === 'tiktok' ? 'max-w-xs opacity-100' : 'max-w-0 opacity-0'}`}>
-                      <a href="https://www.tiktok.com/@selponniyuna" target="_blank" rel="noopener noreferrer" className="ml-4 text-[11px] text-white/90 hover:text-white underline whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                        @selponniyuna
-                      </a>
-                    </div>
-                  </div>
-                  {/* Discord - no link, just text */}
-                  <div
-                    onClick={(e) => toggleContact("discord", e)}
-                    className={`relative rounded-full bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300 flex items-center cursor-pointer overflow-hidden ${activeContact === 'discord' ? 'w-auto' : 'w-12'} h-12`}
-                    style={activeContact === 'discord' ? { paddingRight: '1.5rem' } : {}}
-                  >
-                    <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
-                      <img src="/assets/discord logo.webp" alt="Discord" className="w-7 h-7 object-contain grayscale contrast-125 brightness-150 opacity-80" />
-                    </div>
-                    <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeContact === 'discord' ? 'max-w-xs opacity-100' : 'max-w-0 opacity-0'}`}>
-                      <span className="ml-4 text-[11px] text-white/90 whitespace-nowrap">
-                        sijey2654
-                      </span>
-                    </div>
-                  </div>
-                  {/* WhatsApp - no link, just text */}
-                  <div
-                    onClick={(e) => toggleContact("whatsapp", e)}
-                    className={`relative rounded-full bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300 flex items-center cursor-pointer overflow-hidden ${activeContact === 'whatsapp' ? 'w-auto' : 'w-12'} h-12`}
-                    style={activeContact === 'whatsapp' ? { paddingRight: '1.5rem' } : {}}
-                  >
-                    <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
-                      <img src="/assets/whatsapp-white-icon.webp" alt="WhatsApp" className="w-7 h-7 object-contain brightness-0 invert opacity-70" />
-                    </div>
-                    <div className={`overflow-hidden transition-all duration-300 flex items-center ${activeContact === 'whatsapp' ? 'max-w-xs opacity-100' : 'max-w-0 opacity-0'}`}>
-                      <span className="ml-4 text-[11px] text-white/90 whitespace-nowrap">
-                        +639274423204
-                      </span>
-                    </div>
-                  </div>
+                  {CONTACTS.map((contact) => (
+                    <ExpandPill
+                      key={contact.id}
+                      icon={contact.icon}
+                      iconClassName={contact.iconClassName}
+                      label={contact.label}
+                      open={activeContact === contact.id}
+                      onToggle={() => {
+                        playSelectSound();
+                        if (activeContact && activeContact !== contact.id) markPillSwitch();
+                        setActiveContact((prev) => (prev === contact.id ? null : contact.id));
+                      }}
+                    >
+                      {/* Email opens the same pre-filled Gmail draft as the contact section's button */}
+                      {contact.href || contact.id === "email" ? (
+                        <a
+                          href={contact.href ?? gmailDraftUrl(contact.value)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="pill-text"
+                          onClick={playSelectSound}
+                          aria-label={contact.id === "email" ? "Email me on Gmail (opens a pre-filled draft in a new tab)" : undefined}
+                        >
+                          {contact.value}
+                          <ExternalIcon />
+                        </a>
+                      ) : (
+                        <button type="button" className="pill-text" onClick={(e) => copyContact(contact, e.currentTarget.closest<HTMLElement>(".pill"), e)}>
+                          {contact.value}
+                          {copiedId === contact.id ? <CheckIcon key="check" /> : <CopyIcon key="copy" />}
+                        </button>
+                      )}
+                    </ExpandPill>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
         </div>
-
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce cursor-pointer">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-white/60 hover:text-white transition-colors">
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        </div>
       </section>
-
-      {/* Explicit Spacer between Hero and Work Section */}
-      <div className="h-16 sm:h-24 w-full pointer-events-none" aria-hidden="true" />
 
       {/* ═══════════════════════════════════════════ */}
       {/* WORK SECTION — Portfolio Grid */}
       {/* ═══════════════════════════════════════════ */}
-      <section id="work" className="pt-8 sm:pt-16 pb-16 sm:pb-24">
-        {/* Category Taskbar - Full Window Width */}
-        <div className="w-full mb-8 sm:mb-12">
+      <section id="work" style={{ padding: 'clamp(1rem, 3vh, 2rem) 0 clamp(4rem, 8vh, 6rem)' }}>
+        {/* Tabs, count and grid share one centred column so their edges line up.
+            (Inline padding/margins: the global reset overrides Tailwind spacing utilities.) */}
+        <div className="w-full" style={{ maxWidth: '2400px', margin: '0 auto', padding: '0 clamp(1rem, 3.5vw, 5rem)' }}>
           <CategoryFilter
             categories={[...CATEGORIES]}
             active={activeCategory}
             onChange={setActiveCategory}
+            counts={Object.fromEntries([
+              ["all", projects.length],
+              ...CATEGORIES.map((cat) => [cat.value, projects.filter((p) => p.category === cat.value).length]),
+            ])}
           />
-        </div>
-
-        <div className="w-full px-4 sm:px-6">
-          {/* Section header */}
-          <div className="flex items-center justify-between mb-8 sm:mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold font-[family-name:var(--font-display)]">
-            </h2>
-            <p className="text-sm text-[var(--color-text-muted)] mt-1">
-              {projects.length} projects
-            </p>
-          </div>
 
           {/* Video Grid */}
           {filteredProjects.length === 0 ? (
@@ -332,7 +660,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
               <p className="text-[var(--color-text-muted)]">No projects in this category yet</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-5">
+            <div ref={gridRef} className="project-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ marginTop: 'clamp(1rem, 2.5vw, 2rem)', columnGap: 'clamp(1rem, 2.4vw, 3rem)', rowGap: 'clamp(1.75rem, 3.5vw, 4rem)' }}>
               {filteredProjects.map((project) => (
                 <VideoCard
                   key={project.id}
@@ -341,12 +669,13 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
                   category={project.category}
                   subcategory={project.subcategory}
                   videoUrl={project.videoUrl}
+                  previewUrl={project.previewUrl}
                   thumbnailUrl={project.thumbnailUrl}
                   aspectRatio={project.aspectRatio}
                   featured={project.featured}
                   creator={project.creator}
                   onCopyLink={handleCopyLink}
-                  onClick={() => openLightbox(project)}
+                  onClick={(e) => openFromCard(project, e)}
                 />
               ))}
             </div>
@@ -395,46 +724,99 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
       {/* ═══════════════════════════════════════════ */}
       {/* CONTACT SECTION */}
       {/* ═══════════════════════════════════════════ */}
-      <div className="h-24 sm:h-40 w-full" aria-hidden="true" />
-      <section id="contact" className="pt-12 sm:pt-16 pb-32 sm:pb-48 relative overflow-hidden w-full flex flex-col items-center justify-center">
-        {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black via-[var(--color-surface-900)] to-black" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--color-accent-500)_0%,_transparent_60%)] opacity-[0.03]" />
+      <section id="contact" className="contact-section">
+        <div className="contact-inner">
+          <div className="contact-lead">
+            <p className="panel-label">Contact</p>
+            <h2 className="contact-title">
+              Have a project in mind?
+              <span>Let&apos;s make it move.</span>
+            </h2>
+            <p className="contact-sub">
+              Short-form, long-form, cinematic edits or motion design. Tell me what you&apos;re working on.
+            </p>
+          </div>
 
-        <div className="relative w-full max-w-3xl mx-auto px-6 sm:px-8 lg:px-12 flex flex-col items-center justify-center text-center pb-16 sm:pb-24">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-[family-name:var(--font-display)] leading-tight text-center w-full">
-            Let&apos;s Create
-            <br />
-            <span className="gradient-text">Something Amazing</span>
-          </h2>
-          <p className="text-center text-sm text-[var(--color-text-muted)] mt-4 max-w-md mx-auto w-full">
-            Got a project in mind? I&apos;d love to hear about it. Let&apos;s bring your vision to life.
-          </p>
+          <div className="contact-actions">
+            {(() => {
+              const email = CONTACTS.find((c) => c.id === "email")!;
+              return (
+                <>
+                  <button
+                    type="button"
+                    className="contact-email"
+                    onClick={() => copyText(email.value, "Email copied!")}
+                    aria-label={`Copy email address ${email.value}`}
+                  >
+                    <span className="contact-email-text">{email.value}</span>
+                    <span className="contact-email-hint">
+                      <CopyIcon />
+                      Click to copy
+                    </span>
+                  </button>
+                  <a
+                    href={gmailDraftUrl(email.value)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="contact-send"
+                    onClick={playSelectSound}
+                    aria-label="Email me on Gmail (opens a pre-filled draft in a new tab)"
+                  >
+                    Email me on Gmail
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M7 17L17 7M8 7h9v9" />
+                    </svg>
+                  </a>
+                </>
+              );
+            })()}
 
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
-            {settings?.contactEmail && (
-              <a
-                href={`mailto:${settings.contactEmail}`}
-                className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full text-sm font-medium text-white bg-white/10 hover:bg-white/15 border border-white/20 hover:border-white/35 backdrop-blur-md shadow-lg shadow-black/50 transition-all duration-300 active:scale-[0.97]"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                  <polyline points="22,6 12,13 2,6" />
-                </svg>
-                Get in Touch
-              </a>
-            )}
-
+            <ul className="contact-channels">
+              {CONTACTS.filter((c) => c.id !== "email").map((c) => (
+                <li key={c.id}>
+                  {c.href ? (
+                    <a href={c.href} target="_blank" rel="noopener noreferrer" onClick={playSelectSound}>
+                      <span className="contact-channel-name">{c.label}</span>
+                      <span className="contact-channel-value">{c.value}</span>
+                    </a>
+                  ) : (
+                    <button type="button" onClick={() => copyText(c.value, `${c.label} copied!`)} aria-label={`Copy ${c.label}: ${c.value}`}>
+                      <span className="contact-channel-name">{c.label}</span>
+                      <span className="contact-channel-value">{c.value}</span>
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
+
+        <footer className="contact-footer">
+          <span>© {new Date().getFullYear()} Sijey · Video Editor &amp; Motion Designer</span>
+          <a
+            href="#top"
+            className="back-to-top"
+            onClick={(e) => {
+              e.preventDefault();
+              playSelectSound();
+              // Same eased glide as "View my work" (the page's top is the root element's top)
+              smoothScrollTo(document.documentElement);
+            }}
+          >
+            Back to top
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 19V5M6 11l6-6 6 6" />
+            </svg>
+          </a>
+        </footer>
       </section>
-      <div className="h-20 sm:h-32 w-full pointer-events-none" aria-hidden="true" />
 
       {/* Lightbox */}
       <VideoLightbox
         isOpen={!!lightbox}
         onClose={closeLightbox}
         videoUrl={lightbox?.url || ""}
+        originRect={lightbox?.originRect}
         title={lightbox?.title}
         slug={lightbox?.slug}
       />

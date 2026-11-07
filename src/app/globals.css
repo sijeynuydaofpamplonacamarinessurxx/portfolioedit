@@ -95,7 +95,6 @@ video {
   text-transform: uppercase !important;
   background-color: rgba(0, 0, 0, 0.7) !important;
   backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4) !important;
   white-space: nowrap !important;
 }
@@ -212,14 +211,12 @@ video {
 .glass {
   background: rgba(10, 10, 10, 0.8);
   backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .glass-subtle {
   background: rgba(10, 10, 10, 0.6);
   backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
 }
 
 /* ─── Gradient text ─── */
@@ -282,7 +279,6 @@ video {
   border-radius: 9999px;
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.15);
   display: flex;
   align-items: center;
@@ -311,5 +307,1436 @@ video {
   .copy-link-btn {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* ─── Liquid glass ─── */
+/* Layers: tinted body → refraction (Chromium, via SVG filter) → thick lit rim
+   → inner caustics → specular highlight that follows the pointer. */
+
+.glass-panel {
+  position: relative;
+  isolation: isolate;
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.14) 0%,
+    rgba(255, 255, 255, 0.04) 38%,
+    rgba(255, 255, 255, 0.02) 62%,
+    rgba(255, 255, 255, 0.07) 100%
+  );
+  backdrop-filter: blur(18px) saturate(185%) brightness(1.08);
+  box-shadow:
+    /* lit top and left edges: the thickness of the glass */
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 1px 0 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    /* light pooling inside the rim */
+    inset 14px 18px 36px -24px rgba(255, 255, 255, 0.4),
+    /* teal caustic picked up from the accent */
+    inset -18px -22px 44px -26px rgba(45, 212, 191, 0.45),
+    /* lift off the page */
+    0 40px 80px -32px rgba(0, 0, 0, 0.85);
+}
+
+/* Real refraction where the browser supports SVG filters in backdrop-filter */
+.glass-panel[data-liquid] {
+  backdrop-filter: blur(8px) url(#liquid-refract) saturate(190%) brightness(1.1);
+}
+
+/* Chromatic rim: bright white top-left, cool teal bottom-right */
+.glass-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: 1.5px;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.75) 0%,
+    rgba(255, 255, 255, 0.12) 22%,
+    rgba(255, 255, 255, 0) 48%,
+    rgba(94, 234, 212, 0.28) 78%,
+    rgba(255, 255, 255, 0.45) 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Specular highlight: rests top-left, follows the cursor on desktop (--mx / --my) */
+.glass-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(380px circle at var(--mx, 12%) var(--my, 0%), rgba(255, 255, 255, 0.13), transparent 55%),
+    radial-gradient(260px circle at 100% 100%, rgba(45, 212, 191, 0.1), transparent 70%);
+  pointer-events: none;
+}
+
+.glass-panel > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* ─── Hero ─── */
+
+/* Soft colored light behind the glass, so it has something to bend */
+.hero-orb {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+}
+
+.hero-orb-a {
+  width: 420px;
+  height: 420px;
+  right: 8%;
+  top: 22%;
+  background: radial-gradient(circle, rgba(20, 184, 166, 0.4) 0%, rgba(20, 184, 166, 0.14) 40%, transparent 70%);
+  animation: orb-drift-a 18s ease-in-out infinite alternate;
+}
+
+.hero-orb-b {
+  width: 340px;
+  height: 340px;
+  right: 30%;
+  bottom: 10%;
+  background: radial-gradient(circle, rgba(56, 120, 255, 0.24) 0%, rgba(56, 120, 255, 0.08) 40%, transparent 70%);
+  animation: orb-drift-b 22s ease-in-out infinite alternate;
+}
+
+@keyframes orb-drift-a {
+  to { transform: translate(-60px, 70px) scale(1.15); }
+}
+
+@keyframes orb-drift-b {
+  to { transform: translate(80px, -50px) scale(0.9); }
+}
+
+@media (max-width: 767px) {
+  .hero-orb-a { width: 300px; height: 300px; right: -60px; top: 42%; }
+  .hero-orb-b { width: 260px; height: 260px; left: -80px; right: auto; bottom: 8%; }
+}
+
+/* Film grain over the video */
+.hero-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+/* Staggered entrance, once on load */
+.hero-rise {
+  animation: hero-rise 900ms cubic-bezier(0.2, 0, 0, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 100ms + 100ms);
+}
+
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+    filter: blur(8px);
+  }
+}
+
+.hero-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 34px;
+  padding: 0 16px 0 14px;
+  border-radius: 9999px;
+  font-family: var(--font-space), sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.85);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03));
+  backdrop-filter: blur(12px) saturate(170%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.hero-chip-dot {
+  position: relative;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: var(--color-accent-400);
+  box-shadow: 0 0 10px var(--color-accent-400);
+}
+
+.hero-chip-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--color-accent-400);
+  animation: chip-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes chip-ping {
+  75%, 100% { transform: scale(2.6); opacity: 0; }
+}
+
+.hero-title {
+  background: linear-gradient(180deg, #ffffff 30%, rgba(255, 255, 255, 0.62) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-title-dot {
+  -webkit-text-fill-color: var(--color-accent-400);
+  color: var(--color-accent-400);
+}
+
+.hero-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.hero-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 22px 0 24px;
+  border-radius: 9999px;
+  font-family: var(--font-space), sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition-property: scale, box-shadow, background-color;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hero-btn:active {
+  scale: 0.96;
+}
+
+.hero-btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 3px;
+}
+
+.hero-btn svg {
+  transition: transform 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.hero-btn-primary {
+  color: #021412;
+  background: linear-gradient(180deg, var(--color-accent-300), var(--color-accent-500));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.15),
+    0 10px 30px -10px rgba(20, 184, 166, 0.7);
+}
+
+
+@media (hover: hover) and (pointer: fine) {
+  .hero-btn-primary:hover {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.15),
+      0 14px 40px -8px rgba(20, 184, 166, 0.9);
+  }
+
+  .hero-btn:hover svg {
+    transform: translateX(3px);
+  }
+}
+
+.panel-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-space), sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.panel-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.2), transparent);
+}
+
+/* Off-screen hero: freeze ambient motion and drop the refraction pass */
+.hero[data-offscreen] .hero-orb,
+.hero[data-offscreen] .hero-chip-dot::after {
+  animation-play-state: paused;
+}
+
+/* While the page is auto-scrolling (or the hero is off-screen), refraction is the costliest
+   layer and nobody is looking at it — fall back to plain frosted glass */
+html[data-auto-scrolling] .glass-panel[data-liquid],
+.hero[data-offscreen] .glass-panel[data-liquid] {
+  backdrop-filter: blur(18px) saturate(185%) brightness(1.08);
+}
+
+/* ─── Expandable pills (tools & contacts) ─── */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  height: 48px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+  backdrop-filter: blur(12px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  transition-property: background-color, border-color, box-shadow, scale;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pill:has(.pill-icon:active) {
+  scale: 0.96;
+}
+
+.pill[data-open] {
+  background-color: rgba(20, 184, 166, 0.1);
+  border-color: rgba(20, 184, 166, 0.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 0 0 4px rgba(20, 184, 166, 0.08),
+    0 8px 24px -8px rgba(20, 184, 166, 0.35);
+}
+
+.pill-icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 9999px;
+  background: none;
+  cursor: pointer;
+}
+
+.pill-icon img {
+  transition-property: opacity, transform, filter;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+  pointer-events: none;
+  user-select: none;
+}
+
+.pill[data-open] .pill-icon img {
+  opacity: 1;
+  transform: rotate(-8deg);
+}
+
+/* Label reveal: width animates to the measured label width (--label-w, set from JS).
+   Opening uses a slight overshoot so the pill "pours" open; closing is quicker and settles flat. */
+.pill-label {
+  width: 0;
+  max-width: calc(100vw - 150px);
+  overflow: hidden;
+  transition: width 260ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.pill[data-open] .pill-label {
+  width: var(--label-w, auto);
+  transition: width 520ms cubic-bezier(0.34, 1.32, 0.5, 1);
+}
+
+.pill-label > * {
+  width: max-content;
+  opacity: 0;
+  transform: translateX(-10px);
+  filter: blur(4px);
+  transition:
+    opacity 140ms ease-out,
+    transform 200ms cubic-bezier(0.32, 0.72, 0, 1),
+    filter 140ms ease-out;
+}
+
+.pill[data-open] .pill-label > * {
+  opacity: 1;
+  transform: translateX(0);
+  filter: blur(0);
+  transition:
+    opacity 260ms ease-out 90ms,
+    transform 420ms cubic-bezier(0.32, 0.72, 0, 1) 90ms,
+    filter 260ms ease-out 90ms;
+}
+
+/* One-shot pop on the icon when its pill opens */
+.pill[data-open] .pill-icon img {
+  animation: pill-icon-pop 480ms cubic-bezier(0.34, 1.4, 0.5, 1);
+}
+
+@keyframes pill-icon-pop {
+  0% { transform: scale(1) rotate(0deg); }
+  35% { transform: scale(1.18) rotate(-14deg); }
+  100% { transform: scale(1) rotate(-8deg); }
+}
+
+/* Light sweep across the glass as the pill opens */
+.pill {
+  position: relative;
+  overflow: hidden;
+}
+
+.pill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.22) 50%,
+    transparent 70%
+  );
+  transform: translateX(-120%);
+  pointer-events: none;
+}
+
+.pill[data-open]::after {
+  animation: pill-sheen 700ms cubic-bezier(0.32, 0.72, 0, 1) 60ms;
+}
+
+@keyframes pill-sheen {
+  to { transform: translateX(120%); }
+}
+
+.pill-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 18px 0 2px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.92);
+  white-space: nowrap;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+a.pill-text,
+button.pill-text {
+  cursor: pointer;
+  transition: color 150ms ease-out;
+}
+
+.pill-text svg {
+  flex-shrink: 0;
+  opacity: 0.5;
+  transition: opacity 150ms ease-out;
+}
+
+/* The pill clips its children, so draw the focus ring on the pill itself */
+.pill-icon:focus-visible,
+.pill-text:focus-visible {
+  outline: none;
+}
+
+.pill:has(:focus-visible) {
+  outline: 2px solid rgba(255, 255, 255, 0.8);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pill:not([data-open]):hover {
+    background-color: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .pill:not([data-open]):hover .pill-icon img {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+
+  a.pill-text:hover,
+  button.pill-text:hover {
+    color: var(--color-accent-300);
+  }
+
+  a.pill-text:hover svg,
+  button.pill-text:hover svg {
+    opacity: 1;
+  }
+}
+
+/* Pill and glass animations intentionally play even with prefers-reduced-motion (owner choice) */
+
+.hero-subtitle {
+  text-wrap: balance;
+}
+
+@media (max-width: 639px) {
+  .hero-subtitle {
+    letter-spacing: 0.22em;
+    line-height: 1.7;
+  }
+}
+
+/* ─── Copy pulse (contact rows on phones, contact pills on desktop) ─── */
+/* A soft teal ripple spreads from the press point; the tile glows and settles. */
+
+.pill::before {
+  content: "";
+  position: absolute;
+  left: var(--pulse-x, 50%);
+  top: var(--pulse-y, 50%);
+  z-index: -1;
+  width: 320px;
+  height: 320px;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    rgba(45, 212, 191, 0.38) 0%,
+    rgba(45, 212, 191, 0.14) 35%,
+    transparent 68%
+  );
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.15);
+  pointer-events: none;
+}
+
+.pill[data-pulse]::before {
+  animation: copy-ripple 850ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes copy-ripple {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.15);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.6);
+  }
+}
+
+/* Icon box breathes out a glow ring */
+.pill[data-pulse] .pill-icon {
+  animation: copy-glow 900ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes copy-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(45, 212, 191, 0.55);
+    scale: 1;
+  }
+  30% {
+    scale: 1.08;
+  }
+  100% {
+    box-shadow: 0 0 0 14px rgba(45, 212, 191, 0);
+    scale: 1;
+  }
+}
+
+/* Whole tile lifts a touch and lands */
+.pill[data-pulse] {
+  animation: copy-lift 600ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes copy-lift {
+  0% { scale: 0.97; }
+  45% { scale: 1.015; }
+  100% { scale: 1; }
+}
+
+/* Copy → check icon swap */
+.icon-swap-in {
+  color: var(--color-accent-300);
+  animation: icon-swap-in 300ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.pill-text .icon-swap-in {
+  opacity: 1;
+}
+
+@keyframes icon-swap-in {
+  from {
+    opacity: 0;
+    transform: scale(0.25);
+    filter: blur(4px);
+  }
+}
+
+/* Video card: the ripple sits over the video (under the badges) and the card edge glows */
+.video-card::after {
+  content: "";
+  position: absolute;
+  left: var(--pulse-x, 50%);
+  top: var(--pulse-y, 50%);
+  z-index: 5;
+  width: 520px;
+  height: 520px;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    rgba(45, 212, 191, 0.32) 0%,
+    rgba(45, 212, 191, 0.1) 35%,
+    transparent 68%
+  );
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.15);
+  pointer-events: none;
+}
+
+.video-card[data-pulse]::after {
+  animation: copy-ripple 850ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.video-card[data-pulse] {
+  animation: card-edge-glow 900ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes card-edge-glow {
+  0% { box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.7), 0 0 0 0 rgba(45, 212, 191, 0.4); }
+  100% { box-shadow: 0 0 0 1px rgba(45, 212, 191, 0), 0 0 0 12px rgba(45, 212, 191, 0); }
+}
+
+.video-card[data-pulse] .copy-link-btn {
+  animation: copy-glow 900ms cubic-bezier(0.23, 1, 0.32, 1);
+  background: rgba(20, 184, 166, 0.45);
+  border-color: rgba(45, 212, 191, 0.6);
+  color: #fff;
+}
+
+/* ─── Scroll-driven motion ─── */
+/* Driven by the scroll position itself (no JS per frame), transform/opacity only.
+   Browsers without scroll-driven animations simply keep the static layout. */
+
+@supports (animation-timeline: view()) {
+  .hero {
+    view-timeline-name: --hero;
+  }
+
+  /* Hero recedes as you scroll away: each layer drifts up at its own speed (--exit-y)
+     for depth, fades and settles back. The exit is listed first so the one-off
+     entrance (hero-rise) still wins while it plays. */
+  .hero .hero-rise {
+    animation:
+      hero-exit linear both,
+      hero-rise 900ms cubic-bezier(0.2, 0, 0, 1) backwards;
+    animation-delay: 0s, calc(var(--i, 0) * 100ms + 100ms);
+    animation-timeline: --hero, auto;
+    animation-range: exit 0% exit 75%, normal;
+  }
+
+  /* Phones stack the card under the intro and it's taller than the screen, so its tools
+     and contacts are only reached by scrolling: keep it solid until it's mostly gone */
+  @media (max-width: 767px) {
+    .hero .glass-panel.hero-rise {
+      animation-range: exit 60% exit 100%, normal;
+    }
+  }
+
+  @keyframes hero-exit {
+    to {
+      opacity: 0;
+      translate: 0 calc(-1 * var(--exit-y, 60px));
+      scale: 0.96;
+    }
+  }
+
+  /* Background video dims and pushes in slightly, like a camera dolly */
+  [data-hero-video] {
+    animation: hero-video-exit linear both;
+    animation-timeline: --hero;
+    animation-range: exit 0% exit 100%;
+  }
+
+  @keyframes hero-video-exit {
+    to {
+      opacity: 0.12;
+      scale: 1.08;
+    }
+  }
+
+  /* Scroll focus: the row in the middle of the screen is sharp and full size; rows above
+     and below drift (parallax), shrink, fade and blur, so one row of 3 holds focus at a time.
+     Each column drifts by its own --drift, so a row breaks into a staggered wave instead of
+     moving as one flat block. Focused tiles end on filter: none, so they cost nothing extra. */
+  .project-grid .video-card {
+    --drift: 170px;
+    animation: tile-focus linear both;
+    animation-timeline: view();
+    animation-range: cover 0% cover 100%;
+  }
+
+  @media (min-width: 768px) {
+    .project-grid .video-card:nth-child(3n + 1) { --drift: 190px; }
+    .project-grid .video-card:nth-child(3n + 2) { --drift: 260px; }
+    .project-grid .video-card:nth-child(3n) { --drift: 140px; }
+  }
+
+  @keyframes tile-focus {
+    /* Rows arriving from below drift and shrink only a little, so the first row doesn't
+       leave a hole under the tabs; rows leaving at the top get the full parallax. */
+    0% {
+      opacity: 0.25;
+      scale: 0.86;
+      translate: 0 calc(var(--drift) * 0.35);
+      filter: blur(4px);
+    }
+    42%,
+    58% {
+      opacity: 1;
+      scale: 1;
+      translate: 0 0;
+      filter: none;
+    }
+    100% {
+      opacity: 0.15;
+      scale: 0.68;
+      translate: 0 calc(-1 * var(--drift));
+      filter: blur(4px);
+    }
+  }
+
+  /* While a pulse plays, keep the tile's scroll pose (the pulse rule resets animation) */
+  .project-grid .video-card[data-pulse] {
+    animation:
+      tile-focus linear both,
+      card-edge-glow 900ms cubic-bezier(0.23, 1, 0.32, 1),
+      tile-pop 800ms cubic-bezier(0.34, 1.4, 0.64, 1);
+    animation-timeline: view(), auto, auto;
+    animation-range: cover 0% cover 100%, normal, normal;
+  }
+
+  /* Dips, then springs past full size and settles. Uses transform so it stacks on top of
+     the scroll-driven scale/translate instead of replacing them. */
+  @keyframes tile-pop {
+    0% { transform: scale(0.965); }
+    100% { transform: scale(var(--pop-to, 1)); }
+  }
+
+  /* The row in focus stays enlarged after its pulse; when focus moves on it eases back.
+     transform stacks on the scroll-driven scale, so focus and parallax combine. */
+  .project-grid .video-card {
+    transition:
+      transform 600ms cubic-bezier(0.23, 1, 0.32, 1),
+      border-color 300ms ease;
+  }
+
+  .project-grid .video-card[data-focused] {
+    --pop-to: 1.04;
+    transform: scale(1.04);
+  }
+}
+
+/* ─── Fluid hero: scales across common resolutions ─── */
+/* Phones keep their stacked layout; from tablets up, every size follows the screen
+   (vw) with a floor for small laptops and a ceiling for 1440p/4K. The title also caps by
+   height (vh) so short 1366×768 screens don't overflow. */
+
+.hero-content {
+  max-width: min(94vw, 1800px);
+  margin: 0 auto;
+  gap: 2.5rem;
+  padding-top: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .hero-content {
+    gap: clamp(2.5rem, 5vw, 7rem);
+    padding: 0 clamp(1.5rem, 3vw, 4rem);
+  }
+
+  .hero-title {
+    font-size: clamp(5.5rem, min(10.5vw, 18vh), 15rem);
+  }
+
+  .hero-subtitle {
+    font-size: clamp(0.75rem, 0.72vw, 1.05rem);
+  }
+
+  .hero-chip {
+    height: clamp(34px, 2.1vw, 44px);
+    font-size: clamp(12px, 0.7vw, 15px);
+  }
+
+  .hero-btn {
+    height: clamp(48px, 3vw, 62px);
+    font-size: clamp(14px, 0.85vw, 18px);
+    padding: 0 clamp(22px, 1.4vw, 30px) 0 clamp(24px, 1.5vw, 32px);
+  }
+
+  .hero-panel {
+    flex: 0 1 auto;
+    width: clamp(28rem, 38vw, 50rem);
+  }
+
+  .hero-panel .hero-panel-body {
+    padding: clamp(1.5rem, 2.1vw, 2.75rem) !important;
+  }
+
+  .hero-panel .panel-copy {
+    font-size: clamp(14px, min(0.92vw, 1.9vh), 19px);
+  }
+
+  .hero-panel .panel-lead {
+    font-size: clamp(15px, min(1.05vw, 2.1vh), 21px);
+  }
+}
+
+/* ─── Category filter: slim liquid-glass strip ─── */
+/* A long, low-profile glass strip: near-clear fill, a hairline of light on the top edge,
+   and a thin frosted pill that slides (slight overshoot) to the picked tab. Only the
+   selected tab shows its count. */
+
+.cat-bar-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.cat-bar {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  width: min(100%, 1040px);
+  padding: 3px;
+  border-radius: 9999px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(14px) saturate(150%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.045);
+}
+
+.cat-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.cat-pill {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 0;
+  z-index: -1;
+  width: var(--pill-w, 0px);
+  border-radius: 9999px;
+  transform: translateX(var(--pill-x, 0px));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04));
+  backdrop-filter: blur(8px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  transition:
+    transform 520ms cubic-bezier(0.34, 1.3, 0.5, 1),
+    width 520ms cubic-bezier(0.34, 1.3, 0.5, 1);
+  pointer-events: none;
+}
+
+.cat-tab {
+  flex: 1 1 0;
+  min-width: max-content;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 clamp(12px, 1.2vw, 18px);
+  border: 0;
+  border-radius: 9999px;
+  background: none;
+  font-family: var(--font-space), sans-serif;
+  font-size: clamp(10px, 0.6vw, 11px);
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.38);
+  cursor: pointer;
+  transition-property: color, scale;
+  transition-duration: 200ms;
+  transition-timing-function: ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cat-tab.is-active {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.cat-tab:active {
+  scale: 0.96;
+}
+
+.cat-tab:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.8);
+  outline-offset: -2px;
+}
+
+/* Counts only on the selected tab; the slot stays so tabs never change width */
+.cat-count {
+  font-size: 9.5px;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.45);
+  opacity: 0;
+  transition: opacity 200ms ease-out;
+}
+
+.cat-tab.is-active .cat-count {
+  opacity: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cat-tab:not(.is-active):hover {
+    color: rgba(255, 255, 255, 0.72);
+  }
+}
+
+/* Phones: tabs fill the strip when they fit, scroll sideways when they don't; taps stay 44px */
+@media (max-width: 639px) {
+  .cat-bar-wrap {
+    justify-content: flex-start;
+  }
+
+  /* Grow to share spare room so the strip is filled edge to edge; never shrink below the label */
+  .cat-tab {
+    flex: 1 0 auto;
+    height: 38px;
+  }
+
+  .cat-tab::after {
+    content: "";
+    position: absolute;
+    inset: -3px 0;
+  }
+
+  .cat-tab {
+    position: relative;
+  }
+}
+
+/* ─── Lightbox: zoom from the card, then play ─── */
+
+.lightbox-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: #000;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 40px 100px -30px rgba(0, 0, 0, 0.9);
+  transform-origin: center;
+}
+
+.lightbox-video {
+  display: block;
+  width: 100%;
+  max-height: 85vh;
+  object-fit: contain;
+  background: #000;
+}
+
+/* Dim veil over the paused first frame; lifts as playback starts */
+.lightbox-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.55));
+  pointer-events: none;
+  transition: opacity 450ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.lightbox-frame[data-playing]::after {
+  opacity: 0;
+}
+
+/* Glass play button: pops in once the zoom has settled */
+.lightbox-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  width: clamp(72px, 9vw, 96px);
+  height: clamp(72px, 9vw, 96px);
+  margin: calc(clamp(72px, 9vw, 96px) / -2) 0 0 calc(clamp(72px, 9vw, 96px) / -2);
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 9999px;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.06));
+  backdrop-filter: blur(14px) saturate(170%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 12px 40px -10px rgba(20, 184, 166, 0.55);
+  animation: play-in 480ms cubic-bezier(0.34, 1.4, 0.5, 1) 420ms both;
+  transition:
+    opacity 360ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 360ms cubic-bezier(0.23, 1, 0.32, 1),
+    scale 150ms ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* The triangle path is already centred by its centroid, which reads as optically centred */
+
+.lightbox-play:active {
+  scale: 0.96;
+}
+
+.lightbox-play:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  outline-offset: 4px;
+}
+
+@keyframes play-in {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+}
+
+/* Pressing play: the button swells and dissolves while a liquid ring bursts outward */
+.lightbox-frame[data-playing] .lightbox-play {
+  opacity: 0;
+  transform: scale(1.35);
+  pointer-events: none;
+}
+
+.lightbox-play-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 2px rgba(94, 234, 212, 0.7);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.lightbox-frame[data-playing] .lightbox-play-ring {
+  animation: play-ring 620ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes play-ring {
+  0% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lightbox-frame:not([data-playing]) .lightbox-play:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.lightbox-btn {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 9999px;
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition-property: background-color, color;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+
+.lightbox-btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lightbox-btn:hover {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* ─── Opening a video: press + light bloom (distinct from the copy-link ripple) ─── */
+/* The card presses in like glass under a finger while a soft white→teal light wells up
+   from the click point and fills the card; the lightbox zoom then carries it forward. */
+
+.video-card::before {
+  content: "";
+  position: absolute;
+  left: var(--pulse-x, 50%);
+  top: var(--pulse-y, 50%);
+  z-index: 5;
+  width: 900px;
+  height: 900px;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(204, 251, 241, 0.35) 18%,
+    rgba(45, 212, 191, 0.14) 40%,
+    transparent 65%
+  );
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.08);
+  pointer-events: none;
+}
+
+.video-card[data-opening]::before {
+  animation: open-bloom 560ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+@keyframes open-bloom {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.08);
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Relative to the tile's resting size (--pop-to is 1.04 on the focused row) */
+@keyframes open-press {
+  0% { transform: scale(var(--pop-to, 1)); }
+  40% { transform: scale(calc(var(--pop-to, 1) * 0.965)); }
+  100% { transform: scale(calc(var(--pop-to, 1) * 0.985)); }
+}
+
+.video-card[data-opening] {
+  animation: open-press 300ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+@supports (animation-timeline: view()) {
+  /* Keep the scroll-driven pose while the press plays (the shorthand would reset it) */
+  .project-grid .video-card[data-opening] {
+    animation:
+      tile-focus linear both,
+      open-press 300ms cubic-bezier(0.23, 1, 0.32, 1) both;
+    animation-timeline: view(), auto;
+    animation-range: cover 0% cover 100%, normal;
+  }
+}
+
+/* ─── Card play overlay (touch devices): quiet glass ring ─── */
+.card-play {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 9999px;
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(6px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+}
+
+/* Switching straight from one open pill to another: closing and opening share one curve and
+   duration (no overshoot), so the combined row width moves steadily from start to end and
+   pills never briefly rewrap. A fresh open (nothing else open) keeps its springy overshoot. */
+.glass-panel[data-pill-switch] .pill .pill-label,
+.glass-panel[data-pill-switch] .pill[data-open] .pill-label {
+  transition: width 520ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* ─── Contact: closing section ─── */
+
+.contact-section {
+  position: relative;
+  max-width: 2400px;
+  margin: 0 auto;
+  padding: clamp(5rem, 12vh, 9rem) clamp(1rem, 3.5vw, 5rem) clamp(1.5rem, 3vh, 2.5rem);
+}
+
+.contact-inner {
+  display: grid;
+  gap: clamp(2.5rem, 5vw, 4rem);
+  align-items: end;
+}
+
+@media (min-width: 900px) {
+  .contact-inner {
+    grid-template-columns: 1.2fr 1fr;
+  }
+}
+
+.contact-lead .panel-label {
+  max-width: 220px;
+  margin-bottom: 1.5rem;
+}
+
+.contact-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 5.2vw, 5.5rem);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  color: #fff;
+  text-wrap: balance;
+}
+
+.contact-title span {
+  display: block;
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.contact-sub {
+  margin-top: 1.25rem;
+  max-width: 34ch;
+  font-family: var(--font-space), sans-serif;
+  font-size: clamp(14px, 0.95vw, 17px);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.contact-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+/* The email is the call to action: big, copy on click */
+.contact-email {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  max-width: 100%;
+  border: 0;
+  background: none;
+  padding: 0;
+  text-align: left;
+  color: #fff;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.contact-email-text {
+  max-width: 100%;
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 2.6vw, 2.6rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  padding-bottom: 4px;
+  transition: background-size 400ms cubic-bezier(0.23, 1, 0.32, 1), color 200ms ease-out;
+}
+
+.contact-email-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-space), sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+  transition: color 200ms ease-out;
+}
+
+.contact-email:active .contact-email-text {
+  color: var(--color-accent-300);
+}
+
+.contact-email:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 6px;
+  border-radius: 6px;
+}
+
+.contact-send {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 18px 0 20px;
+  border-radius: 9999px;
+  font-family: var(--font-space), sans-serif;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  transition-property: background-color, color, scale;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+
+.contact-send:active {
+  scale: 0.96;
+}
+
+.contact-send:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 3px;
+}
+
+.contact-channels {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.75rem;
+  margin-top: 1.25rem;
+}
+
+.contact-channels a,
+.contact-channels button {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 44px;
+  justify-content: center;
+  border: 0;
+  background: none;
+  padding: 0;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.contact-channel-name {
+  font-family: var(--font-space), sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.contact-channel-value {
+  font-family: var(--font-space), sans-serif;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  transition: color 150ms ease-out;
+}
+
+.contact-channels a:focus-visible,
+.contact-channels button:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.contact-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: clamp(4rem, 10vh, 7rem);
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  font-family: var(--font-space), sans-serif;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.contact-footer a {
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: none;
+  transition: color 150ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .contact-email:hover .contact-email-text {
+    background-size: 100% 1px;
+  }
+
+  .contact-email:hover .contact-email-hint,
+  .contact-footer a:hover {
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  .contact-send:hover {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.09);
+  }
+
+  .contact-channels a:hover .contact-channel-value,
+  .contact-channels button:hover .contact-channel-value {
+    color: var(--color-accent-300);
+  }
+}
+
+/* Back to top: liquid-glass pill in the footer */
+.contact-footer {
+  align-items: center;
+}
+
+.contact-footer a.back-to-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 18px 0 20px;
+  border-radius: 9999px;
+  font-family: var(--font-space), sans-serif;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.03));
+  backdrop-filter: blur(14px) saturate(160%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 10px 30px -14px rgba(0, 0, 0, 0.8);
+  transition-property: background-color, color, scale;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.back-to-top svg {
+  transition: transform 250ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.back-to-top:active {
+  scale: 0.96;
+}
+
+.back-to-top:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .contact-footer a.back-to-top:hover {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.07);
+  }
+
+  .back-to-top:hover svg {
+    transform: translateY(-2px);
   }
 }

@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import path from "node:path";
 import { prisma } from "@/lib/prisma";
 import HomeClient from "./HomeClient";
 
@@ -12,14 +14,15 @@ const FALLBACK_PROJECTS = [
   { id: "s3", title: "PART2-revised2-with subtitles3-final", slug: "shortforms-part2-revised2-with-subtitles3-final", category: "shortforms", videoUrl: "/videos/shortforms/PART2-revised2-with subtitles3-final.mp4", thumbnailUrl: null, aspectRatio: "9:16", featured: false, sortOrder: 0, creator: "deanjoseph__", subcategory: null, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
   { id: "s4", title: "interview", slug: "shortforms-interview", category: "shortforms", videoUrl: "/videos/shortforms/interview.mp4", thumbnailUrl: null, aspectRatio: "9:16", featured: false, sortOrder: 0, creator: null, subcategory: null, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
   { id: "s5", title: "$900PC-FINAL", slug: "shortforms-900pc-final", category: "shortforms", videoUrl: "/videos/shortforms/$900PC-FINAL.mp4", thumbnailUrl: null, aspectRatio: "9:16", featured: false, sortOrder: 11, creator: "NwBuilds", subcategory: null, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
+  { id: "s6", title: "FOMO 2", slug: "shortforms-fomo-2", category: "shortforms", videoUrl: "/videos/shortforms/FOMO2.mp4", thumbnailUrl: null, aspectRatio: "9:16", featured: false, sortOrder: 0, creator: "@mattinvestz", subcategory: null, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
   
   // Longforms
   { id: "l1", title: "JAPAN-sample2", slug: "longforms-japan-sample2", category: "longforms", videoUrl: "/videos/longforms/JAPAN-sample2.mp4", thumbnailUrl: null, aspectRatio: "16:9", featured: false, sortOrder: 0, creator: null, subcategory: "Narrative", description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
 
   // Cinematic
-  { id: "c1", title: "FINAL SHI-2", slug: "cinematic-final-shi-2", category: "cinematic", videoUrl: "/videos/cinematic/FINAL SHI-2.mp4", thumbnailUrl: null, aspectRatio: "16:9", featured: false, sortOrder: 0, creator: "imahemakaluma", subcategory: null, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
-  { id: "c2", title: "LUMA NA MAGAYON", slug: "cinematic-luma-na-magayon", category: "cinematic", videoUrl: "/videos/cinematic/LUMA NA MAGAYON.mp4", thumbnailUrl: null, aspectRatio: "16:9", featured: false, sortOrder: 0, creator: "imahemakaluma", subcategory: null, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
-  { id: "c3", title: "LUMA NA PANGIT", slug: "cinematic-luma-na-pangit", category: "cinematic", videoUrl: "/videos/cinematic/LUMA NA PANGIT.mp4", thumbnailUrl: null, aspectRatio: "16:9", featured: false, sortOrder: 0, creator: "imahemakaluma", subcategory: null, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
+  { id: "c1", title: "FINAL SHI-2", slug: "cinematic-final-shi-2", category: "cinematic", videoUrl: "/videos/cinematic/FINAL SHI-2.mp4", thumbnailUrl: null, aspectRatio: "16:9", featured: false, sortOrder: 0, creator: "FilmCy", subcategory: null, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
+  { id: "c2", title: "LUMA NA MAGAYON", slug: "cinematic-luma-na-magayon", category: "cinematic", videoUrl: "/videos/cinematic/LUMA NA MAGAYON.mp4", thumbnailUrl: null, aspectRatio: "16:9", featured: false, sortOrder: 0, creator: "FilmCy", subcategory: null, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
+  { id: "c3", title: "LUMA NA PANGIT", slug: "cinematic-luma-na-pangit", category: "cinematic", videoUrl: "/videos/cinematic/LUMA NA PANGIT.mp4", thumbnailUrl: null, aspectRatio: "16:9", featured: false, sortOrder: 0, creator: "FilmCy", subcategory: null, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
 
   // Creative / Experiments
   { id: "e1", title: "FINAL  - 3 - LEGIT", slug: "experiments-final-3-legit", category: "experiments", videoUrl: "/videos/experiments/FINAL  - 3 - LEGIT.mp4", thumbnailUrl: null, aspectRatio: "16:9", featured: false, sortOrder: 0, creator: null, subcategory: null, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
@@ -50,6 +53,13 @@ export default async function HomePage() {
   if (projects.length === 0) {
     projects = FALLBACK_PROJECTS;
   }
+
+  // Attach the lightweight grid preview (made by scripts/generate-previews.mjs) where one exists
+  projects = projects.map((p) => {
+    const previewUrl = p.videoUrl?.startsWith("/videos/") ? p.videoUrl.replace(/^\/videos\//, "/videos/previews/") : null;
+    const hasPreview = previewUrl && existsSync(path.join(process.cwd(), "public", decodeURI(previewUrl)));
+    return { ...p, previewUrl: hasPreview ? previewUrl : null };
+  });
 
   // Find projects with before/after content
   const beforeAfterProjects = projects.filter((p) => p.beforeUrl && p.afterUrl);
