@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { CATEGORIES } from "@/lib/utils";
+import { categoryLabel, cn, creatorHandle } from "@/lib/utils";
 import { playPulse } from "@/lib/pulse";
 
 interface VideoCardProps {
@@ -18,6 +18,7 @@ interface VideoCardProps {
   creator?: string | null;
   onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
   onCopyLink?: (slug: string) => void;
+  className?: string;
 }
 
 export default function VideoCard({
@@ -33,6 +34,7 @@ export default function VideoCard({
   creator,
   onClick,
   onCopyLink,
+  className,
 }: VideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -95,13 +97,22 @@ export default function VideoCard({
     else video.pause();
   }, [shouldPlay, isVisible]);
 
-  // Force all previews to be rectangular (16:9)
-  const aspectClass = "aspect-video";
+  // Show each edit in the shape it was made for; a featured tile fills whatever cell it spans
+  const aspectClass = className?.includes("is-feature")
+    ? "aspect-video md:aspect-auto md:h-full"
+    : aspectRatio === "9:16"
+      ? "aspect-[9/16]"
+      : aspectRatio === "1:1"
+        ? "aspect-square"
+        : "aspect-video";
 
   return (
     <div
       ref={cardRef}
-      className="video-card group relative overflow-hidden rounded-[var(--radius-lg)] bg-[var(--color-surface-900)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] transition-all duration-300 cursor-pointer"
+      className={cn(
+        "video-card group relative overflow-hidden rounded-[var(--radius-lg)] bg-[var(--color-surface-900)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] transition-all duration-300 cursor-pointer",
+        className
+      )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
@@ -157,20 +168,12 @@ export default function VideoCard({
 
         {/* Category & Creator badges */}
         {(() => {
-          let activeCreator = creator;
-          if (!activeCreator && (title.toLowerCase().includes("900pc") || title.toLowerCase().includes("nwbuilds"))) activeCreator = "NwBuilds";
-          if (!activeCreator && (category === "cinematic" || title.toLowerCase().includes("luma") || title.toLowerCase().includes("shi-2"))) activeCreator = "FilmCy";
-
-          const formattedCreator = activeCreator
-            ? activeCreator.startsWith("@")
-              ? activeCreator
-              : `@${activeCreator}`
-            : null;
+          const formattedCreator = creatorHandle({ creator, category, title });
 
           return (
             <div className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1.5 flex-wrap">
               <span className="badge-pill badge-pill-category">
-                {CATEGORIES.find(c => c.value === category)?.label || category}
+                {categoryLabel(category)}
               </span>
               {subcategory && (
                 <span className="badge-pill badge-pill-category" style={{ opacity: 0.8 }}>

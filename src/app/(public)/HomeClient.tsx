@@ -6,6 +6,7 @@ import VideoCard from "@/components/VideoCard";
 import VideoLightbox from "@/components/VideoLightbox";
 import CategoryFilter from "@/components/CategoryFilter";
 import BeforeAfterSlider from "@/components/BeforeAfterSlider";
+import FeaturedProject, { FEATURED_PROJECT } from "@/components/FeaturedProject";
 import { CATEGORIES } from "@/lib/utils";
 import { playPulse } from "@/lib/pulse";
 import { enableSmoothWheel } from "@/lib/smoothWheel";
@@ -363,6 +364,11 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
   // Auto-open lightbox if ?v=slug is in the URL
   useEffect(() => {
     const videoSlug = searchParams.get("v");
+    if (videoSlug === FEATURED_PROJECT.slug) {
+      const { videoUrl: url, title, slug } = FEATURED_PROJECT;
+      setLightbox((prev) => (prev?.slug === slug ? prev : { url, title, slug }));
+      return;
+    }
     if (videoSlug && projects.length > 0) {
       const matchedProject = projects.find((p) => p.slug === videoSlug);
       if (matchedProject) {
@@ -423,7 +429,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
     e: React.MouseEvent<HTMLElement>
   ) => {
     if (tile) playPulse(tile, e);
-    copyText(contact.value, `${contact.label} copied!`);
+    copyText(contact.value, `${contact.label} copied`);
     setCopiedId(contact.id);
     clearTimeout(copiedTimer.current);
     copiedTimer.current = setTimeout(() => setCopiedId(null), 1600);
@@ -431,7 +437,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
 
   // Copy link handler
   const handleCopyLink = useCallback(
-    (slug: string) => copyText(`${window.location.origin}/?v=${slug}`, "Link copied!"),
+    (slug: string) => copyText(`${window.location.origin}/?v=${slug}`, "Link copied"),
     [copyText]
   );
 
@@ -453,6 +459,17 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
     },
     [openLightbox]
   );
+
+  // The featured film opens like a card: press bloom on the frame, then the player grows out of it
+  const openFeatured = useCallback((frame: HTMLElement, e: React.MouseEvent<HTMLElement>) => {
+    playOpenSound();
+    playPulse(frame, e, { attr: "opening", duration: 800 });
+    const { videoUrl: url, title, slug } = FEATURED_PROJECT;
+    setTimeout(() => {
+      setLightbox({ url, title, slug, originRect: frame.getBoundingClientRect() });
+      window.history.replaceState(null, "", `/?v=${slug}`);
+    }, 260);
+  }, []);
 
   // Close lightbox and clean URL
   const closeLightbox = useCallback(() => {
@@ -478,7 +495,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
       {/* ═══════════════════════════════════════════ */}
       {/* HERO SECTION */}
       {/* ═══════════════════════════════════════════ */}
-      <section ref={heroRef} className="hero relative flex flex-col items-center justify-center overflow-hidden" style={{ padding: 'clamp(4.5rem, 9vh, 7rem) 0 clamp(2rem, 5vh, 4rem)', minHeight: '100svh' }}>
+      <section ref={heroRef} className="hero relative flex flex-col items-center justify-center overflow-hidden">
         {/* Background video */}
         <video
           ref={heroVideoRef}
@@ -520,11 +537,11 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
               <h1 className="hero-title hero-rise text-[22vw] sm:text-[15vw] md:text-[6rem] lg:text-[10rem] font-bold font-[family-name:var(--font-display)] tracking-tighter uppercase leading-none" style={{ "--i": 1, "--exit-y": "120px" } as React.CSSProperties}>
                 SIJEY<span className="hero-title-dot">.</span>
               </h1>
-              <p className="hero-subtitle hero-rise text-xs sm:text-sm text-white/70 uppercase tracking-[0.3em]" style={{ "--i": 2, "--exit-y": "95px", marginTop: '1rem' } as React.CSSProperties}>
-                Video Editor, Motion Designer & Storyteller
+              <p className="hero-subtitle hero-rise" style={{ "--i": 2, "--exit-y": "95px" } as React.CSSProperties}>
+                Video editor and motion designer. Short-form, long-form and cinematic.
               </p>
             </div>
-            <div className="hero-ctas hero-rise justify-center md:justify-start" style={{ "--i": 3, "--exit-y": "75px", marginTop: '0.5rem' } as React.CSSProperties}>
+            <div className="hero-ctas hero-rise justify-center md:justify-start" style={{ "--i": 3, "--exit-y": "75px" } as React.CSSProperties}>
               <a
                 href="#work"
                 className="hero-btn hero-btn-primary"
@@ -534,10 +551,21 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
                   smoothScrollTo(document.getElementById("work"));
                 }}
               >
-                View my work
+                Watch the work
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M5 12h14M13 6l6 6-6 6" />
+                  <path d="M12 5v14M6 13l6 6 6-6" />
                 </svg>
+              </a>
+              <a
+                href="#contact"
+                className="hero-btn hero-btn-ghost"
+                onClick={(e) => {
+                  e.preventDefault();
+                  playSelectSound();
+                  smoothScrollTo(document.getElementById("contact"));
+                }}
+              >
+                Start a project
               </a>
             </div>
           </div>
@@ -554,24 +582,21 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
             }}
           >
             <div className="hero-panel-body" style={{ padding: '1.75rem' }}>
-              <p className="panel-label" style={{ marginBottom: '1rem' }}>About me</p>
-              <div style={{ fontFamily: 'var(--font-space), sans-serif', lineHeight: '1.65', color: 'rgba(245, 245, 247, 0.82)', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '0.85rem' }} className="panel-copy text-sm sm:text-[15px]">
-                <p style={{ color: '#F5F5F7' }} className="panel-lead text-[15px] sm:text-base">
-                  I&apos;m a <strong style={{ fontWeight: 700, color: 'var(--color-accent-500)' }}>video editor</strong> and <strong style={{ fontWeight: 700, color: 'var(--color-accent-500)' }}>motion designer</strong> specializing in storytelling,
-                  creative edits, and shortform content that captivates audiences.
+              <p className="panel-label" style={{ marginBottom: '1rem' }}>About</p>
+              <div className="panel-copy">
+                <p className="panel-lead">
+                  I&apos;m the main video editor for <strong>FilmCy</strong>, working across short-form,
+                  long-form and cinematic projects.
                 </p>
                 <p>
-                  With a keen eye for pacing, color grading, and visual effects, I transform
-                  raw footage into polished, emotionally resonant pieces that leave lasting impressions.
-                </p>
-                <p>
-                  Beyond the technical execution, my priority is deeply <strong style={{ fontWeight: 700, color: 'var(--color-accent-500)' }}>understanding your unique needs and delivering tailored visual solutions that will solve your problems.</strong>
+                  I help creators and communities bring out what makes them distinct, shaping every edit
+                  around the goal the video is meant to reach.
                 </p>
               </div>
 
               {/* Tools & Resources */}
               <div className="flex flex-col items-stretch" style={{ marginTop: '1.5rem' }}>
-                <p className="panel-label" style={{ marginBottom: '0.75rem' }}>Tools &amp; Resources</p>
+                <p className="panel-label" style={{ marginBottom: '0.75rem' }}>Tools</p>
                 <div className="flex flex-wrap justify-start gap-3">
                   {TOOLS.map((tool) => (
                     <ExpandPill
@@ -594,7 +619,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
 
               {/* Contacts */}
               <div className="flex flex-col items-stretch" style={{ marginTop: '1.25rem' }}>
-                <p className="panel-label" style={{ marginBottom: '0.75rem' }}>Contacts</p>
+                <p className="panel-label" style={{ marginBottom: '0.75rem' }}>Contact</p>
                 <div className="flex flex-wrap justify-start gap-3">
                   {CONTACTS.map((contact) => (
                     <ExpandPill
@@ -635,7 +660,10 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
             </div>
           </div>
         </div>
+
       </section>
+
+      <FeaturedProject onOpen={openFeatured} playerOpen={lightbox?.slug === FEATURED_PROJECT.slug} />
 
       {/* ═══════════════════════════════════════════ */}
       {/* WORK SECTION — Portfolio Grid */}
@@ -644,6 +672,13 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
         {/* Tabs, count and grid share one centred column so their edges line up.
             (Inline padding/margins: the global reset overrides Tailwind spacing utilities.) */}
         <div className="w-full" style={{ maxWidth: '2400px', margin: '0 auto', padding: '0 clamp(1rem, 3.5vw, 5rem)' }}>
+          <header className="work-head">
+            <h2 className="work-title">Selected work</h2>
+            <p className="work-sub">
+              {projects.length} edits across short-form, long-form, cinematic and creative. Tap any one to watch it in full.
+            </p>
+          </header>
+
           <CategoryFilter
             categories={[...CATEGORIES]}
             active={activeCategory}
@@ -660,24 +695,51 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
               <p className="text-[var(--color-text-muted)]">No projects in this category yet</p>
             </div>
           ) : (
-            <div ref={gridRef} className="project-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ marginTop: 'clamp(1rem, 2.5vw, 2rem)', columnGap: 'clamp(1rem, 2.4vw, 3rem)', rowGap: 'clamp(1.75rem, 3.5vw, 4rem)' }}>
-              {filteredProjects.map((project) => (
-                <VideoCard
-                  key={project.id}
-                  title={project.title}
-                  slug={project.slug}
-                  category={project.category}
-                  subcategory={project.subcategory}
-                  videoUrl={project.videoUrl}
-                  previewUrl={project.previewUrl}
-                  thumbnailUrl={project.thumbnailUrl}
-                  aspectRatio={project.aspectRatio}
-                  featured={project.featured}
-                  creator={project.creator}
-                  onCopyLink={handleCopyLink}
-                  onClick={(e) => openFromCard(project, e)}
-                />
-              ))}
+            <div ref={gridRef} className="work-groups">
+              {(() => {
+                const vertical = filteredProjects.filter((p) => p.aspectRatio === "9:16");
+                const landscape = filteredProjects.filter((p) => p.aspectRatio !== "9:16");
+                // One landscape piece leads at double size: a featured one if set, else the first
+                const lead = landscape.length >= 4 ? (landscape.find((p) => p.featured) ?? landscape[0]) : null;
+                const orderedLandscape = lead ? [lead, ...landscape.filter((p) => p !== lead)] : landscape;
+                const card = (project: Project, className?: string) => (
+                  <VideoCard
+                    key={project.id}
+                    className={className}
+                    title={project.title}
+                    slug={project.slug}
+                    category={project.category}
+                    subcategory={project.subcategory}
+                    videoUrl={project.videoUrl}
+                    previewUrl={project.previewUrl}
+                    thumbnailUrl={project.thumbnailUrl}
+                    aspectRatio={project.aspectRatio}
+                    featured={project.featured}
+                    creator={project.creator}
+                    onCopyLink={handleCopyLink}
+                    onClick={(e) => openFromCard(project, e)}
+                  />
+                );
+                const showLabels = vertical.length > 0 && landscape.length > 0;
+                return (
+                  <>
+                    {vertical.length > 0 && (
+                      <div className="work-group">
+                        {showLabels && <p className="panel-label">Short form, 9:16</p>}
+                        <div className="project-grid grid-vertical">{vertical.map((p) => card(p))}</div>
+                      </div>
+                    )}
+                    {landscape.length > 0 && (
+                      <div className="work-group">
+                        {showLabels && <p className="panel-label">Long form, cinematic &amp; creative</p>}
+                        <div className="project-grid grid-landscape">
+                          {orderedLandscape.map((p) => card(p, p === lead ? "is-feature" : undefined))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           )}
         </div>
@@ -745,7 +807,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
                   <button
                     type="button"
                     className="contact-email"
-                    onClick={() => copyText(email.value, "Email copied!")}
+                    onClick={() => copyText(email.value, "Email copied")}
                     aria-label={`Copy email address ${email.value}`}
                   >
                     <span className="contact-email-text">{email.value}</span>
@@ -780,7 +842,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
                       <span className="contact-channel-value">{c.value}</span>
                     </a>
                   ) : (
-                    <button type="button" onClick={() => copyText(c.value, `${c.label} copied!`)} aria-label={`Copy ${c.label}: ${c.value}`}>
+                    <button type="button" onClick={() => copyText(c.value, `${c.label} copied`)} aria-label={`Copy ${c.label}: ${c.value}`}>
                       <span className="contact-channel-name">{c.label}</span>
                       <span className="contact-channel-value">{c.value}</span>
                     </button>

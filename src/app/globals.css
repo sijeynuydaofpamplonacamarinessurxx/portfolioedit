@@ -41,8 +41,7 @@
 
   /* Typography */
   --font-display: "Outfit", sans-serif;
-  --font-body: "Inter", sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  --font-body: var(--font-space), "Space Grotesk", sans-serif;
 
   /* Spacing */
   --radius-sm: 0.375rem;
@@ -69,7 +68,7 @@ html {
 body {
   background: var(--color-black);
   color: var(--color-text-primary);
-  font-family: var(--font-body);
+  font-family: var(--font-space), sans-serif;
   line-height: 1.6;
   overflow-x: hidden;
 }
@@ -487,10 +486,8 @@ video {
 }
 
 .hero-title {
-  background: linear-gradient(180deg, #ffffff 30%, rgba(255, 255, 255, 0.62) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: #f5f5f3;
+  text-shadow: 0 2px 40px rgba(0, 0, 0, 0.35);
 }
 
 .hero-title-dot {
@@ -563,10 +560,10 @@ video {
   align-items: center;
   gap: 12px;
   font-family: var(--font-space), sans-serif;
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .panel-label::after {
@@ -788,12 +785,7 @@ button.pill-text {
   text-wrap: balance;
 }
 
-@media (max-width: 639px) {
-  .hero-subtitle {
-    letter-spacing: 0.22em;
-    line-height: 1.7;
-  }
-}
+
 
 /* ─── Copy pulse (contact rows on phones, contact pills on desktop) ─── */
 /* A soft teal ripple spreads from the press point; the tile glows and settles. */
@@ -1068,7 +1060,7 @@ button.pill-text {
   }
 
   .hero-subtitle {
-    font-size: clamp(0.75rem, 0.72vw, 1.05rem);
+    font-size: clamp(1rem, 1.05vw, 1.4rem);
   }
 
   .hero-chip {
@@ -1163,12 +1155,10 @@ button.pill-text {
   border-radius: 9999px;
   background: none;
   font-family: var(--font-space), sans-serif;
-  font-size: clamp(10px, 0.6vw, 11px);
-  font-weight: 400;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  font-size: clamp(13px, 0.75vw, 14px);
+  font-weight: 500;
   white-space: nowrap;
-  color: rgba(255, 255, 255, 0.38);
+  color: rgba(255, 255, 255, 0.45);
   cursor: pointer;
   transition-property: color, scale;
   transition-duration: 200ms;
@@ -1558,10 +1548,8 @@ button.pill-text {
   align-items: center;
   gap: 6px;
   font-family: var(--font-space), sans-serif;
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.35);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
   transition: color 200ms ease-out;
 }
 
@@ -1630,10 +1618,9 @@ button.pill-text {
 
 .contact-channel-name {
   font-family: var(--font-space), sans-serif;
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.35);
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .contact-channel-value {
@@ -1738,5 +1725,1043 @@ button.pill-text {
 
   .back-to-top:hover svg {
     transform: translateY(-2px);
+  }
+}
+
+
+/* ─── Hero refinements ─── */
+
+.hero {
+  min-height: 100svh;
+  padding: clamp(4.5rem, 9vh, 7rem) 0 clamp(2rem, 5vh, 4rem);
+}
+
+.hero-subtitle {
+  max-width: 30ch;
+  margin-top: 1rem;
+  font-family: var(--font-space), sans-serif;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.78);
+  text-wrap: balance;
+}
+
+.hero-ctas {
+  margin-top: 0.5rem;
+}
+
+.hero-btn-ghost {
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hero-btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+}
+
+.panel-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  max-width: 52ch;
+  font-family: var(--font-space), sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(245, 245, 247, 0.7);
+  text-wrap: pretty;
+}
+
+.panel-lead {
+  font-size: 16px;
+  line-height: 1.5;
+  color: #f5f5f7;
+}
+
+.panel-copy strong {
+  font-weight: 600;
+  color: #fff;
+}
+
+/* ─── Work section ─── */
+
+.work-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem 2rem;
+  margin: clamp(1.5rem, 4vh, 3rem) 0 clamp(1.25rem, 3vh, 2rem);
+}
+
+.work-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.25rem, 4.5vw, 4.75rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  color: #fff;
+}
+
+.work-sub {
+  max-width: 44ch;
+  font-family: var(--font-space), sans-serif;
+  font-size: clamp(14px, 0.95vw, 17px);
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.5);
+  text-wrap: pretty;
+}
+
+.work-groups {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(3rem, 6vw, 6rem);
+  margin-top: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.work-group > .panel-label {
+  margin-bottom: clamp(1rem, 1.6vw, 1.5rem);
+}
+
+.grid-vertical,
+.grid-landscape {
+  display: grid;
+}
+
+.grid-vertical {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: clamp(0.75rem, 1.6vw, 2rem);
+  row-gap: clamp(1.25rem, 2.5vw, 3rem);
+}
+
+@media (min-width: 640px) {
+  .grid-vertical { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (min-width: 900px) {
+  .grid-vertical { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1200px) {
+  .grid-vertical { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+}
+
+.grid-landscape {
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: clamp(1rem, 2.4vw, 3rem);
+  row-gap: clamp(1.75rem, 3.5vw, 4rem);
+}
+
+@media (min-width: 640px) {
+  .grid-landscape { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-landscape .is-feature { grid-column: span 2; }
+}
+
+@media (min-width: 768px) {
+  .grid-landscape { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .grid-landscape .is-feature { grid-row: span 2; }
+}
+
+/* ─── Featured project (Spotlight) ─── */
+/* One film given the stage between the hero and the grid. As it scrolls into the middle of
+   the screen a beam of light falls on it, its own colours glow behind it and the frame
+   "lights up"; text and frame drift at different speeds for depth, like the grid below. */
+
+.featured {
+  position: relative;
+  isolation: isolate;
+  overflow-x: clip; /* the light and glow must never widen the page */
+  padding: clamp(6rem, 16vh, 11rem) 0 clamp(4rem, 9vh, 7rem);
+  view-timeline-name: --featured;
+}
+
+.featured-inner {
+  position: relative;
+  display: grid;
+  gap: clamp(1.75rem, 3vw, 2.5rem);
+  max-width: 2400px;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 3.5vw, 5rem);
+}
+
+@media (min-width: 1024px) {
+  .featured-inner {
+    grid-template-columns: minmax(19rem, 1fr) minmax(0, 2.5fr);
+    align-items: end;
+    gap: clamp(2.5rem, 4vw, 5rem);
+  }
+}
+
+/* Stacked (phones, tablets): the film leads, the copy follows */
+@media (max-width: 1023px) {
+  .featured-stage {
+    order: -1;
+  }
+}
+
+/* ── Copy ── */
+
+.featured-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.featured-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-space), sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(245, 245, 243, 0.6);
+}
+
+.featured-label-spot {
+  color: var(--color-accent-300);
+}
+
+.featured-label-divider {
+  width: 1px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.featured-title {
+  margin-top: 0.75rem;
+  font-family: var(--font-display);
+  font-size: clamp(2.25rem, 3.6vw, 4.25rem);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  color: #f5f5f3;
+  text-wrap: balance;
+}
+
+.featured-summary {
+  margin-top: 0.75rem;
+  max-width: 34ch;
+  font-family: var(--font-space), sans-serif;
+  font-size: clamp(15px, 1vw, 18px);
+  line-height: 1.55;
+  color: rgba(245, 245, 243, 0.6);
+  text-wrap: pretty;
+}
+
+/* Credit on its own line, tags grouped beneath it */
+.featured-credit {
+  margin-top: 1.25rem;
+  font-family: var(--font-space), sans-serif;
+  font-size: 14px;
+  color: rgba(245, 245, 243, 0.82);
+}
+
+.featured-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 0.75rem;
+  list-style: none;
+}
+
+.featured-tag {
+  font-family: var(--font-space), sans-serif;
+  padding: 5px 11px;
+  border-radius: 9999px;
+  font-size: 12.5px;
+  line-height: 1.2;
+  color: rgba(245, 245, 243, 0.75);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+/* ── Stage, glow and beam ── */
+
+.featured-stage {
+  position: relative;
+  isolation: isolate;
+  transform-origin: 50% 100%; /* scroll scaling grows from the platform, keeping its line level */
+}
+
+/* The film's own colours, blurred, spill out behind the frame like light off a screen */
+.featured-glow {
+  position: absolute;
+  inset: 8% 4%;
+  z-index: 0;
+  width: 92%;
+  height: 84%;
+  object-fit: cover;
+  border-radius: 40px;
+  filter: blur(60px) saturate(1.5);
+  opacity: 0.35;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ── Frame ── */
+
+.featured-frame {
+  position: relative;
+  z-index: 2;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: var(--radius-xl);
+  background: var(--color-surface-900);
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.8);
+}
+
+.featured-frame video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: scale 700ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Hairline edge, above the video so it stays crisp against bright frames */
+.featured-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.09);
+  pointer-events: none;
+}
+
+/* Cursor spotlight: a soft light that follows the pointer across the picture and its edge */
+.featured-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  background: radial-gradient(
+    600px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+    rgba(255, 255, 255, 0.1),
+    transparent 45%
+  );
+  opacity: 0;
+  transition: opacity 300ms ease-out;
+  pointer-events: none;
+}
+
+/* Full-frame button that opens the player; its ::before is the house-lights scrim */
+.featured-open {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.featured-open::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.6));
+  opacity: 0;
+  pointer-events: none;
+}
+
+.featured-open:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: -4px;
+}
+
+.featured-play {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: clamp(60px, 5vw, 84px);
+  aspect-ratio: 1;
+  border-radius: 9999px;
+  color: #fff;
+  background: rgba(10, 10, 10, 0.4);
+  backdrop-filter: blur(14px) saturate(160%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+  transition-property: opacity, scale, background-color;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.featured-play svg {
+  translate: 2px 0; /* optical centre: nudge toward the point */
+}
+
+.featured-open:active .featured-play {
+  scale: 0.96;
+}
+
+/* Mouse: play button and spotlight wait for hover. Touch: play button stays as the affordance. */
+@media (hover: hover) and (pointer: fine) {
+  .featured-play {
+    opacity: 0;
+    scale: 0.9;
+  }
+
+  .featured-frame:hover .featured-play,
+  .featured-open:focus-visible .featured-play {
+    opacity: 1;
+    scale: 1;
+  }
+
+  .featured-frame:hover::after {
+    opacity: 1;
+  }
+
+  .featured-frame:hover video {
+    scale: 1.02;
+  }
+
+  .featured-open:hover .featured-play {
+    background: rgba(10, 10, 10, 0.55);
+  }
+}
+
+/* Press bloom before the player opens (same timing as the grid cards) */
+.featured-frame[data-opening] {
+  animation: featured-press 800ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes featured-press {
+  0% { scale: 1; }
+  25% { scale: 0.985; }
+  100% { scale: 1; }
+}
+
+/* ── Controls: sound toggle and runtime ── */
+
+.featured-controls {
+  position: absolute;
+  z-index: 3;
+  left: clamp(10px, 1.2vw, 18px);
+  right: clamp(10px, 1.2vw, 18px);
+  bottom: clamp(10px, 1.2vw, 18px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none; /* only the button itself takes clicks; the rest falls through to the frame */
+}
+
+.featured-sound {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 14px 0 11px;
+  border: 0;
+  border-radius: 9999px;
+  font-family: var(--font-space), sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  background: rgba(10, 10, 10, 0.5);
+  backdrop-filter: blur(14px) saturate(160%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+  cursor: pointer;
+  pointer-events: auto;
+  transition-property: scale, background-color, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 44px touch target around the 40px pill */
+.featured-sound::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+}
+
+.featured-sound:active {
+  scale: 0.96;
+}
+
+.featured-sound:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 3px;
+}
+
+.featured-sound[aria-pressed="true"] {
+  background: rgba(20, 184, 166, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(94, 234, 212, 0.45);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .featured-sound:hover {
+    background: rgba(25, 25, 25, 0.7);
+  }
+
+  .featured-sound[aria-pressed="true"]:hover {
+    background: rgba(20, 184, 166, 0.38);
+  }
+}
+
+.featured-sound-icon {
+  display: grid;
+  place-items: center;
+  animation: sound-icon-in 220ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes sound-icon-in {
+  from {
+    opacity: 0;
+    scale: 0.6;
+    filter: blur(3px);
+  }
+}
+
+.featured-runtime {
+  padding: 4px 9px;
+  border-radius: 6px;
+  font-family: var(--font-space), sans-serif;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(10, 10, 10, 0.45);
+  backdrop-filter: blur(10px);
+}
+
+@media (max-width: 479px) {
+  .featured-sound-text {
+    display: none;
+  }
+
+  .featured-sound {
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+}
+
+/* ── Scroll choreography ── */
+/* Driven by scroll position (no JS per frame), transform/opacity only. Without support,
+   or with reduced motion, everything simply sits in its resting, lit state. */
+
+@supports (animation-timeline: view()) {
+  /* Plays with reduced motion too (owner choice, like the hero's pills) */
+  @media all {
+    /* Parallax: the frame rises and settles, the copy moves at its own slower pace */
+    /* Parallax drift on the wrapper holding both columns, so the copy and the platform can never
+       come apart; the stage adds only a gentle scale, grown from the platform's base */
+    .featured-inner {
+      animation: featured-inner-drift linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+
+    .featured-stage {
+      animation: featured-stage-scale linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+
+    /* Lights: beam, glow and the frame itself come up as the film reaches the middle */
+    .featured-light,
+    .featured-glow {
+      animation: featured-light linear both;
+      animation-timeline: view();
+      animation-range: cover 10% cover 90%;
+    }
+
+    .featured-open::before {
+      animation: featured-house-lights linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+  }
+}
+
+@keyframes featured-inner-drift {
+  0% {
+    opacity: 0.3;
+    translate: 0 90px;
+  }
+  40%,
+  60% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  100% {
+    opacity: 0.25;
+    translate: 0 -80px;
+  }
+}
+
+@keyframes featured-stage-scale {
+  0% { scale: 0.92; }
+  40%,
+  60% { scale: 1; }
+  100% { scale: 0.95; }
+}
+
+
+@keyframes featured-light {
+  0%,
+  100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
+/* Dim at the edges of the scroll, fully lit when you face it */
+@keyframes featured-house-lights {
+  0% { opacity: 1; }
+  40%,
+  60% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* ── Spotlight ── */
+/* A single stage light high on the left, aimed down across the description and the film.
+   No visible fixture: only what light actually shows in a dark room. A small bright source,
+   a soft cone whose edges and length fall off gradually, the light catching the film from the
+   upper left, and a pool on the "floor" below. Neutral white, with fine grain so the gradients
+   read as light rather than banding. */
+
+.featured-light {
+  /* Source position and aim (degrees clockwise from straight up) */
+  --src-x: 14%;
+  --src-y: 2%;
+  --aim-from: 100deg; /* cone runs from ~100° (toward the film) to ~204° (down onto the copy) */
+
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  user-select: none;
+}
+
+@media (max-width: 1023px) {
+  .featured-light {
+    --src-x: 30%;
+    --src-y: 1%;
+    --aim-from: 118deg; /* stacked layout: aim mostly down over the film and the copy below it */
+  }
+}
+
+/* The cone: angular falloff from a conic gradient, distance falloff from a radial mask,
+   then softened. Peak brightness runs along the middle of the cone. */
+.featured-beam {
+  position: absolute;
+  inset: 0;
+  background: conic-gradient(
+    from var(--aim-from) at var(--src-x) var(--src-y),
+    transparent 0deg,
+    rgba(236, 242, 255, 0.05) 16deg,
+    rgba(236, 242, 255, 0.13) 38deg,
+    rgba(240, 245, 255, 0.17) 52deg,
+    rgba(236, 242, 255, 0.13) 66deg,
+    rgba(236, 242, 255, 0.05) 88deg,
+    transparent 104deg,
+    transparent 360deg
+  );
+  -webkit-mask-image: radial-gradient(circle at var(--src-x) var(--src-y), #000 0%, rgba(0, 0, 0, 0.85) 30%, rgba(0, 0, 0, 0.35) 65%, transparent 95%);
+  mask-image: radial-gradient(circle at var(--src-x) var(--src-y), #000 0%, rgba(0, 0, 0, 0.85) 30%, rgba(0, 0, 0, 0.35) 65%, transparent 95%);
+  filter: blur(18px);
+  opacity: 0;
+}
+
+/* Fine grain inside the beam only, so it reads as light through air instead of a flat gradient */
+.featured-beam::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+}
+
+/* The source: a small, very bright lens seen from below, tilted toward its target */
+.featured-source {
+  position: absolute;
+  left: var(--src-x);
+  top: var(--src-y);
+  width: clamp(64px, 5.5vw, 96px);
+  height: clamp(9px, 0.7vw, 12px);
+  translate: -50% -50%;
+  rotate: -14deg; /* tilted to face down-right, toward the copy and film */
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, #fff 0%, #f2f6ff 35%, rgba(230, 238, 255, 0.6) 60%, transparent 75%);
+  box-shadow:
+    0 0 14px 3px rgba(240, 245, 255, 0.55),
+    0 0 48px 14px rgba(220, 232, 255, 0.18);
+  opacity: 0;
+}
+
+/* The pool on the floor: a wide soft ellipse with a brighter core, under the copy and film */
+.featured-floor {
+  position: absolute;
+  left: 6%;
+  right: 10%;
+  bottom: 0;
+  height: clamp(40px, 6vh, 70px);
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse 50% 22% at 50% 50%, rgba(245, 248, 255, 0.28), transparent 100%),
+    radial-gradient(ellipse 50% 50% at 50% 50%, rgba(230, 238, 255, 0.1), transparent 100%);
+  filter: blur(6px);
+  opacity: 0;
+}
+
+/* The film catches the light from the upper left */
+.featured-pool {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: radial-gradient(ellipse 90% 80% at 0% 0%, rgba(255, 255, 255, 0.2), transparent 70%);
+  mix-blend-mode: soft-light;
+  box-shadow: inset 1px 1px 0 rgba(240, 245, 255, 0.35);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Lit, resting state (also the state with reduced motion) */
+.featured[data-lit] .featured-source,
+.featured[data-lit] .featured-beam,
+.featured[data-lit] .featured-floor,
+.featured[data-lit] .featured-pool {
+  opacity: 1;
+}
+
+/* Switch-on, once: the source blooms, the beam fills the room after it, the light then
+   settles onto the film and the floor. A smooth rise, not a flicker. */
+/* Plays with reduced motion too (owner choice, like the hero's pills) */
+  @media all {
+  .featured[data-lit] .featured-source {
+    animation: light-source-on 500ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  }
+
+  .featured[data-lit] .featured-beam {
+    animation: light-fade-on 1400ms cubic-bezier(0.23, 1, 0.32, 1) 150ms both;
+  }
+
+  .featured[data-lit] .featured-pool,
+  .featured[data-lit] .featured-floor {
+    animation: light-fade-on 900ms cubic-bezier(0.23, 1, 0.32, 1) 550ms both;
+  }
+}
+
+@keyframes light-source-on {
+  from {
+    opacity: 0;
+    scale: 0.9;
+  }
+}
+
+@keyframes light-fade-on {
+  from { opacity: 0; }
+}
+
+/* ── Floating film and display platform ── */
+
+/* The film sits a little narrower than its column so the platform can read wider beneath it */
+.featured-float {
+  position: relative;
+  width: 86%;
+  margin-inline: auto;
+}
+
+/* A satin pedestal disc. Its size comes from its width (aspect-ratio), so the ellipse keeps the
+   same believable depth at every screen size instead of thinning to needle-sharp ends. Parts:
+   underside, rim, top surface, plus a soft contact shadow on the floor. */
+.featured-platform {
+  position: relative;
+  width: 92%;
+  aspect-ratio: 100 / 12.5;
+  margin: clamp(44px, 5.5vw, 96px) auto 0;
+  /* Desktop columns align on their bottom edge; pulling the disc ~60% of its height below that
+     line puts its top surface level with the description's tag row (percent = stage width) */
+  margin-bottom: -5.2%;
+  pointer-events: none;
+  user-select: none;
+}
+
+.featured-platform-base,
+.featured-platform-side,
+.featured-platform-top {
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+
+/* Contact shadow: wide, very soft, darkest right under the disc */
+.featured-platform::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 4%;
+  right: 4%;
+  top: 55%;
+  height: 90%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.35) 45%, transparent 72%);
+  filter: blur(16px);
+}
+
+/* Underside: rounds off the bottom of the rim */
+.featured-platform-base {
+  top: 16%;
+  height: 84%;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #141416 0%, #2c2c2f 26%, #18181a 60%, #0b0b0c 100%);
+  filter: blur(0.5px);
+}
+
+/* Rim: a soft specular band on the left where the spotlight catches it, falling off to the right */
+.featured-platform-side {
+  top: 42%;
+  height: 16%;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 60%),
+    linear-gradient(90deg, #141416 0%, #3a3a3e 24%, #222225 52%, #0c0c0d 100%);
+  filter: blur(0.5px);
+}
+
+/* Top surface: satin, lit from the upper left, darker toward the back right, with fine grain */
+.featured-platform-top {
+  top: 0;
+  height: 84%;
+  overflow: hidden;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse 55% 75% at 30% 38%, rgba(255, 255, 255, 0.13), transparent 70%),
+    radial-gradient(ellipse 120% 100% at 50% 60%, #333336 0%, #242427 55%, #18181a 100%);
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.1),
+    inset 0 -4px 10px rgba(0, 0, 0, 0.55);
+}
+
+/* Fine grain so the surface reads as material, not a vector fill */
+.featured-platform-top::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+}
+
+/* Front lip highlight: the edge nearest the viewer catches a thin line of light, fading out
+   toward both ends instead of running hard to the tips */
+.featured-platform-top::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 -1.5px 0 rgba(255, 255, 255, 0.16);
+  -webkit-mask-image: linear-gradient(90deg, transparent 4%, #000 30%, #000 55%, transparent 92%);
+  mask-image: linear-gradient(90deg, transparent 4%, #000 30%, #000 55%, transparent 92%);
+}
+
+/* The film's shadow cast onto the top surface */
+.featured-platform-shadow {
+  position: absolute;
+  left: 16%;
+  right: 16%;
+  top: 24%;
+  height: 50%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.3) 45%, transparent 72%);
+  filter: blur(8px);
+}
+
+/* Idle float: a slow sine drift that never stops at a hard turn. The shadow answers it, wider and
+   lighter as the film rises, tighter and darker as it comes back down. Pauses while the section
+   is off screen. Plays with reduced motion too (owner choice, like the hero's pills). */
+.featured-float {
+  animation: featured-float 2s cubic-bezier(0.37, 0, 0.63, 1) infinite alternate;
+}
+
+.featured-platform-shadow {
+  animation: featured-float-shadow 2s cubic-bezier(0.37, 0, 0.63, 1) infinite alternate;
+}
+
+.featured:not([data-playing]) .featured-float,
+.featured:not([data-playing]) .featured-platform-shadow {
+  animation-play-state: paused;
+}
+
+@keyframes featured-float {
+  from { transform: translateY(0); }
+  to { transform: translateY(-14px); }
+}
+
+@keyframes featured-float-shadow {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0.55;
+    transform: scale(1.12);
+  }
+}
+
+@media (max-width: 1023px) {
+  .featured-float {
+    width: 92%;
+  }
+
+  .featured-platform {
+    width: 100%;
+    margin-top: clamp(32px, 8vw, 56px);
+    margin-bottom: 0; /* stacked: nothing beside it to line up with */
+  }
+}
+
+/* ── Featured details: collapsed by default ── */
+
+.featured-details-toggle {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  margin-top: 1rem;
+  padding: 0 13px 0 14px;
+  border: 0;
+  border-radius: 9999px;
+  font-family: var(--font-space), sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(245, 245, 243, 0.82);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition-property: scale, background-color, color;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 44px touch target around the 34px pill */
+.featured-details-toggle::before {
+  content: "";
+  position: absolute;
+  inset: -5px -2px;
+}
+
+.featured-details-toggle:active {
+  scale: 0.96;
+}
+
+.featured-details-toggle:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 3px;
+}
+
+/* Plus turns into a cross when open */
+.featured-details-toggle svg {
+  transition: rotate 250ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.featured-details-toggle[aria-expanded="true"] svg {
+  rotate: 45deg;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .featured-details-toggle:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.09);
+  }
+}
+
+/* Expands by grid rows (no fixed height to guess); content fades and settles in */
+.featured-details {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 300ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.featured-details[data-open] {
+  grid-template-rows: 1fr;
+}
+
+.featured-details-inner {
+  display: flow-root; /* keeps the first line's top margin inside, so closed means 0px tall */
+  min-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  translate: 0 -4px;
+  transition:
+    opacity 200ms ease-out,
+    translate 300ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.featured-details[data-open] .featured-details-inner {
+  opacity: 1;
+  translate: 0 0;
+  transition-delay: 60ms;
+}
+
+/* First line inside sits a little below the toggle */
+.featured-details-inner > :first-child {
+  margin-top: 0.9rem;
+}
+
+/* Press pulse on the Details toggle: the contact pills' pulse (copy-ripple, copy-lift timings)
+   in white. The ripple lives in its own clipped layer so the toggle's enlarged hit area,
+   which spills outside the pill, stays clickable. */
+.featured-details-ripple {
+  position: absolute;
+  z-index: -1; /* under the label, above the pill's own fill (the toggle isolates) */
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.featured-details-ripple::before {
+  content: "";
+  position: absolute;
+  left: var(--pulse-x, 50%);
+  top: var(--pulse-y, 50%);
+  width: 240px;
+  height: 240px;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.34) 0%,
+    rgba(255, 255, 255, 0.12) 35%,
+    transparent 68%
+  );
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.15);
+}
+
+.featured-details-toggle[data-pulse] .featured-details-ripple::before {
+  animation: copy-ripple 850ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Lifts a touch and lands, while a white ring breathes out from its edge */
+.featured-details-toggle[data-pulse] {
+  animation:
+    copy-lift 600ms cubic-bezier(0.23, 1, 0.32, 1),
+    details-glow 900ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes details-glow {
+  0% {
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+      0 0 0 0 rgba(255, 255, 255, 0.45);
+  }
+  100% {
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+      0 0 0 12px rgba(255, 255, 255, 0);
   }
 }

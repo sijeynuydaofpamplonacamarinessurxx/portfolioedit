@@ -30,13 +30,27 @@ export function formatFileSize(bytes: number): string {
 }
 
 export const CATEGORIES = [
-  { value: "shortforms", label: "Short Form" },
-  { value: "longforms", label: "Long Form" },
+  { value: "shortforms", label: "Short form" },
+  { value: "longforms", label: "Long form" },
   { value: "cinematic", label: "Cinematic" },
   { value: "experiments", label: "Creative" },
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number]["value"];
+
+export function categoryLabel(category: string): string {
+  return CATEGORIES.find((c) => c.value === category)?.label ?? category;
+}
+
+/** The creator a video was cut for, as an @handle, filling in known clients where the data has none */
+export function creatorHandle(p: { creator?: string | null; category: string; title: string }): string | null {
+  let creator = p.creator;
+  const title = p.title.toLowerCase();
+  if (!creator && (title.includes("900pc") || title.includes("nwbuilds"))) creator = "NwBuilds";
+  if (!creator && (p.category === "cinematic" || title.includes("luma") || title.includes("shi-2"))) creator = "FilmCy";
+  if (!creator) return null;
+  return creator.startsWith("@") ? creator : `@${creator}`;
+}
 
 export const ASPECT_RATIOS = [
   { value: "16:9", label: "16:9 Landscape" },

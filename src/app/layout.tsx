@@ -1,21 +1,9 @@
 import type { Metadata } from "next";
-import { Inter, Outfit, JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import { Outfit, Space_Grotesk } from "next/font/google";
 import "./globals.css";
-
-const inter = Inter({
-  variable: "--font-body",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 const outfit = Outfit({
   variable: "--font-display",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-mono",
   subsets: ["latin"],
   display: "swap",
 });
@@ -27,9 +15,9 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "sijey. — Video Editor & Motion Designer",
+  title: "Sijey · Video editor & motion designer",
   description:
-    "Professional video editing and motion design portfolio. Cinematic storytelling, AMV edits, and shortform content that captivates audiences.",
+    "Sijey is a video editor and motion designer cutting short-form, long-form and cinematic work for creators.",
   keywords: [
     "video editor",
     "motion designer",
@@ -39,7 +27,7 @@ export const metadata: Metadata = {
     "shortform",
   ],
   openGraph: {
-    title: "sijey. — Video Editor & Motion Designer",
+    title: "Sijey · Video editor & motion designer",
     description:
       "Professional video editing and motion design portfolio. Cinematic storytelling, AMV edits, and shortform content.",
     type: "website",
@@ -50,7 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${outfit.variable} ${jetbrainsMono.variable} ${spaceGrotesk.variable} h-full`}
+      className={`${outfit.variable} ${spaceGrotesk.variable} h-full`}
     >
       <body className="min-h-full flex flex-col noise">{children}</body>
     </html>
