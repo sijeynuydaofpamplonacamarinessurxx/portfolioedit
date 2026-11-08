@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useLayoutEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
-import VideoCard from "@/components/VideoCard";
+import WorkCarousel from "@/components/WorkCarousel";
 import VideoLightbox from "@/components/VideoLightbox";
 import CategoryFilter from "@/components/CategoryFilter";
 import BeforeAfterSlider from "@/components/BeforeAfterSlider";
@@ -89,7 +89,18 @@ function ExpandPill({ icon, iconClassName, label, open, onToggle, children }: Ex
 
   return (
     <div ref={pillRef} className="pill" data-pill data-open={open || undefined}>
-      <button type="button" className="pill-icon" onClick={onToggle} aria-expanded={open} aria-label={label}>
+      <button
+        type="button"
+        className="pill-icon"
+        onClick={onToggle}
+        aria-expanded={open}
+        aria-label={label}
+        // Press state from pointer events: iOS often skips :active on a quick tap
+        onPointerDown={() => pillRef.current?.setAttribute("data-pressed", "")}
+        onPointerUp={() => pillRef.current?.removeAttribute("data-pressed")}
+        onPointerCancel={() => pillRef.current?.removeAttribute("data-pressed")}
+        onPointerLeave={() => pillRef.current?.removeAttribute("data-pressed")}
+      >
         <img src={icon} alt="" className={iconClassName} draggable={false} />
       </button>
       <div className="pill-label" inert={!open}>
@@ -254,85 +265,9 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
   }, [activeTool, activeContact]);
-  const gridRef = useRef<HTMLDivElement>(null);
-
   // Eased, inertial mouse-wheel scrolling so scroll-driven effects glide instead of stepping
   useEffect(() => enableSmoothWheel(), []);
 
-  // Enlarge the row of project tiles that comes to rest in the middle of the screen, left to
-  // right with a short stagger. A fast scroll flies past several rows at once, so rows only
-  // take focus once scrolling slows to a browsing pace or stops — one row at a time.
-  useEffect(() => {
-    const grid = gridRef.current;
-    if (!grid) return;
-    const SETTLE_MS = 140;
-    const BROWSING_SPEED = 0.6; // px per ms; faster than this is "flying past"
-    let lastRowTop: number | null = null;
-    let lastY = window.scrollY;
-    let lastTime = performance.now();
-    let settleTimer: ReturnType<typeof setTimeout> | undefined;
-    const focusTimers: ReturnType<typeof setTimeout>[] = [];
-
-    // Cards grouped by their untransformed layout position (the scroll effects move them visually)
-    const centreRow = () => {
-      const cards = [...grid.querySelectorAll<HTMLElement>(".video-card")];
-      if (!cards.length) return null;
-      const gridTop = grid.getBoundingClientRect().top - grid.offsetTop;
-      const middle = window.innerHeight / 2;
-      let best: { top: number; distance: number } | null = null;
-      for (const card of cards) {
-        const centre = gridTop + card.offsetTop + card.offsetHeight / 2;
-        const distance = Math.abs(centre - middle);
-        if (!best || distance < best.distance) best = { top: card.offsetTop, distance };
-      }
-      // Only count it as "in focus" if the row is actually near the middle
-      if (!best || best.distance > cards[0].offsetHeight * 0.75) return null;
-      return { top: best.top, cards: cards.filter((c) => c.offsetTop === best.top) };
-    };
-
-    const focusCentreRow = () => {
-      const row = centreRow();
-      if (!row || row.top === lastRowTop) return;
-      lastRowTop = row.top;
-      focusTimers.forEach(clearTimeout);
-      focusTimers.length = 0;
-      // The previous row eases back to normal size; this one grows and stays enlarged
-      grid.querySelectorAll<HTMLElement>(".video-card[data-focused]").forEach((card) => delete card.dataset.focused);
-      row.cards
-        .sort((a, b) => a.offsetLeft - b.offsetLeft)
-        .forEach((card, column) => {
-          focusTimers.push(
-            setTimeout(() => {
-              card.dataset.focused = "";
-            }, column * 80)
-          );
-        });
-    };
-
-    let speed = Infinity;
-    const onScroll = () => {
-      const now = performance.now();
-      const moved = Math.abs(window.scrollY - lastY);
-      if (moved === 0) return;
-      const elapsed = now - lastTime;
-      // After a pause there's no recent sample to measure against, so assume it's a flick;
-      // otherwise smooth the reading so one odd event can't shift focus mid-flick
-      const sample = elapsed > 100 ? Infinity : moved / Math.max(1, elapsed);
-      speed = Number.isFinite(speed) && Number.isFinite(sample) ? speed * 0.6 + sample * 0.4 : sample;
-      lastY = window.scrollY;
-      lastTime = now;
-      clearTimeout(settleTimer);
-      if (speed < BROWSING_SPEED) focusCentreRow();
-      else settleTimer = setTimeout(focusCentreRow, SETTLE_MS);
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      clearTimeout(settleTimer);
-      focusTimers.forEach(clearTimeout);
-    };
-  }, [projects, activeCategory]);
   const heroRef = useRef<HTMLElement>(null);
   const heroVideoRef = useRef<HTMLVideoElement>(null);
 
@@ -355,8 +290,11 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
 
   // SVG refraction in backdrop-filter only renders in Chromium; Safari/Firefox (and iOS Chrome, which is WebKit)
   // keep the plain frosted glass. userAgentData would be cleaner but is missing on plain-http LAN access.
+  // Phones keep the frosted glass too: the refraction filter re-runs over the hero video every
+  // frame, which is the heaviest effect on the page for a phone GPU.
   useEffect(() => {
-    if (glassRef.current && "chrome" in window && !/CriOS|FxiOS|EdgiOS/.test(navigator.userAgent)) {
+    const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    if (glassRef.current && finePointer && "chrome" in window && !/CriOS|FxiOS|EdgiOS/.test(navigator.userAgent)) {
       glassRef.current.dataset.liquid = "";
     }
   }, []);
@@ -434,12 +372,6 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
     clearTimeout(copiedTimer.current);
     copiedTimer.current = setTimeout(() => setCopiedId(null), 1600);
   };
-
-  // Copy link handler
-  const handleCopyLink = useCallback(
-    (slug: string) => copyText(`${window.location.origin}/?v=${slug}`, "Link copied"),
-    [copyText]
-  );
 
   // Open lightbox and update URL. From a card, the card pulses first and the player then
   // zooms out of the card's position (originRect).
@@ -672,12 +604,6 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
         {/* Tabs, count and grid share one centred column so their edges line up.
             (Inline padding/margins: the global reset overrides Tailwind spacing utilities.) */}
         <div className="w-full" style={{ maxWidth: '2400px', margin: '0 auto', padding: '0 clamp(1rem, 3.5vw, 5rem)' }}>
-          <header className="work-head">
-            <h2 className="work-title">Selected work</h2>
-            <p className="work-sub">
-              {projects.length} edits across short-form, long-form, cinematic and creative. Tap any one to watch it in full.
-            </p>
-          </header>
 
           <CategoryFilter
             categories={[...CATEGORIES]}
@@ -695,47 +621,32 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
               <p className="text-[var(--color-text-muted)]">No projects in this category yet</p>
             </div>
           ) : (
-            <div ref={gridRef} className="work-groups">
+            <div className="work-groups">
               {(() => {
                 const vertical = filteredProjects.filter((p) => p.aspectRatio === "9:16");
                 const landscape = filteredProjects.filter((p) => p.aspectRatio !== "9:16");
-                // One landscape piece leads at double size: a featured one if set, else the first
-                const lead = landscape.length >= 4 ? (landscape.find((p) => p.featured) ?? landscape[0]) : null;
-                const orderedLandscape = lead ? [lead, ...landscape.filter((p) => p !== lead)] : landscape;
-                const card = (project: Project, className?: string) => (
-                  <VideoCard
-                    key={project.id}
-                    className={className}
-                    title={project.title}
-                    slug={project.slug}
-                    category={project.category}
-                    subcategory={project.subcategory}
-                    videoUrl={project.videoUrl}
-                    previewUrl={project.previewUrl}
-                    thumbnailUrl={project.thumbnailUrl}
-                    aspectRatio={project.aspectRatio}
-                    featured={project.featured}
-                    creator={project.creator}
-                    onCopyLink={handleCopyLink}
-                    onClick={(e) => openFromCard(project, e)}
-                  />
-                );
-                const showLabels = vertical.length > 0 && landscape.length > 0;
+                const single = vertical.length === 0 || landscape.length === 0;
+                const tabLabel = CATEGORIES.find((c) => c.value === activeCategory)?.label;
+                // Keyed by tab so switching categories starts a fresh carousel on its first clip
                 return (
                   <>
                     {vertical.length > 0 && (
-                      <div className="work-group">
-                        {showLabels && <p className="panel-label">Short form, 9:16</p>}
-                        <div className="project-grid grid-vertical">{vertical.map((p) => card(p))}</div>
-                      </div>
+                      <WorkCarousel
+                        key={`v-${activeCategory}`}
+                        label={single && tabLabel ? tabLabel : "Short form, 9:16"}
+                        projects={vertical}
+                        orientation="vertical"
+                        onOpen={openFromCard}
+                      />
                     )}
                     {landscape.length > 0 && (
-                      <div className="work-group">
-                        {showLabels && <p className="panel-label">Long form, cinematic &amp; creative</p>}
-                        <div className="project-grid grid-landscape">
-                          {orderedLandscape.map((p) => card(p, p === lead ? "is-feature" : undefined))}
-                        </div>
-                      </div>
+                      <WorkCarousel
+                        key={`l-${activeCategory}`}
+                        label={single && tabLabel ? tabLabel : "Long form, cinematic & creative"}
+                        projects={landscape}
+                        orientation="landscape"
+                        onOpen={openFromCard}
+                      />
                     )}
                   </>
                 );

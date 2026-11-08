@@ -72,6 +72,63 @@ export default function FeaturedProject({ onOpen, playerOpen = false }: Featured
     else video.pause();
   }, [inView, playerOpen]);
 
+  // Scroll choreography fallback. Browsers with scroll-driven CSS animations (Chrome, Edge,
+  // Safari 26+) run the parallax and light fade entirely in CSS. Older iPhone Safari and Firefox
+  // don't, so there the same curves are applied from a rAF-throttled scroll handler that is only
+  // attached while the section is on screen.
+  const sectionRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section || CSS.supports("animation-timeline: view()")) return;
+    const inner = section.querySelector<HTMLElement>(".featured-inner");
+    const stage = section.querySelector<HTMLElement>(".featured-stage");
+    const light = section.querySelector<HTMLElement>(".featured-light");
+    const glow = section.querySelector<HTMLElement>(".featured-glow");
+    const glowBase = glow ? parseFloat(getComputedStyle(glow).opacity) || 0.3 : 0;
+
+    // Piecewise-linear, same stops as the CSS keyframes
+    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+    const plateau = (p: number, edgeIn: number, mid: number, edgeOut: number) =>
+      p < 0.4 ? lerp(edgeIn, mid, p / 0.4) : p > 0.6 ? lerp(mid, edgeOut, (p - 0.6) / 0.4) : mid;
+
+    let frame = 0;
+    const apply = () => {
+      frame = 0;
+      const rect = section.getBoundingClientRect();
+      const vh = window.innerHeight;
+      // 0 when the section's top enters the bottom of the screen, 1 when its bottom leaves the top
+      const p = Math.min(1, Math.max(0, (vh - rect.top) / (vh + rect.height)));
+      if (inner) {
+        inner.style.translate = `0 ${plateau(p, 90, 0, -80).toFixed(1)}px`;
+        inner.style.opacity = plateau(p, 0.3, 1, 0.25).toFixed(3);
+      }
+      if (stage) stage.style.scale = plateau(p, 0.92, 1, 0.95).toFixed(4);
+      const lightUp = p < 0.5 ? Math.max(0, (p - 0.1) / 0.4) : Math.max(0, (0.9 - p) / 0.4);
+      if (light) light.style.opacity = Math.min(1, lightUp).toFixed(3);
+      if (glow) glow.style.opacity = (Math.min(1, lightUp) * glowBase).toFixed(3);
+      section.style.setProperty("--house", plateau(p, 1, 0, 1).toFixed(3));
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(apply);
+    };
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        window.addEventListener("scroll", onScroll, { passive: true });
+        apply();
+      } else {
+        window.removeEventListener("scroll", onScroll);
+      }
+    });
+    observer.observe(section);
+    section.dataset.scrollFallback = "";
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+
   // Spotlight that follows the cursor across the frame (style vars, no re-render per move)
   const trackPointer = (e: React.PointerEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -83,6 +140,7 @@ export default function FeaturedProject({ onOpen, playerOpen = false }: Featured
 
   return (
     <section
+      ref={sectionRef}
       className="featured"
       aria-labelledby="featured-title"
       data-playing={inView || undefined}

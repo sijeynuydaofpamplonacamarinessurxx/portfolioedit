@@ -73,6 +73,13 @@ body {
   overflow-x: hidden;
 }
 
+/* No double-tap-to-zoom wait on controls, so taps register immediately on phones */
+button,
+a,
+[role="tab"] {
+  touch-action: manipulation;
+}
+
 video {
   -webkit-user-select: none;
   -khtml-user-select: none;
@@ -604,8 +611,12 @@ html[data-auto-scrolling] .glass-panel[data-liquid],
   -webkit-tap-highlight-color: transparent;
 }
 
-.pill:has(.pill-icon:active) {
+/* Press: in fast (120ms) so it answers the finger, out on the pill's usual 200ms curve */
+.pill:has(.pill-icon:active),
+.pill[data-pressed] {
   scale: 0.96;
+  transition-duration: 120ms;
+  transition-timing-function: ease-out;
 }
 
 .pill[data-open] {
@@ -2004,17 +2015,28 @@ button.pill-text {
 /* ── Frame ── */
 
 .featured-frame {
+  --frame-radius: var(--radius-xl);
   position: relative;
   z-index: 2;
   aspect-ratio: 16 / 9;
   overflow: hidden;
   isolation: isolate;
-  border-radius: var(--radius-xl);
+  border-radius: var(--frame-radius);
+  /* Mobile Safari lets a playing <video> paint square corners through overflow + radius while
+     its parent is animating (the float); a rounded clip-path holds the corners on every engine */
+  clip-path: inset(0 round var(--frame-radius));
   background: var(--color-surface-900);
-  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.8);
+}
+
+/* Phones: a tighter corner suits the smaller frame (and matches the 12px video cards) */
+@media (max-width: 639px) {
+  .featured-frame {
+    --frame-radius: var(--radius-lg);
+  }
 }
 
 .featured-frame video {
+  border-radius: inherit;
   position: absolute;
   inset: 0;
   width: 100%;
@@ -2471,6 +2493,15 @@ button.pill-text {
   position: relative;
   width: 86%;
   margin-inline: auto;
+  /* The frame's drop shadow lives here: the frame's rounded clip-path would cut it off */
+  border-radius: var(--radius-xl);
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.8);
+}
+
+@media (max-width: 639px) {
+  .featured-float {
+    border-radius: var(--radius-lg);
+  }
 }
 
 /* A satin pedestal disc. Its size comes from its width (aspect-ratio), so the ellipse keeps the
@@ -2764,4 +2795,323 @@ button.pill-text {
       inset 0 0 0 1px rgba(255, 255, 255, 0.12),
       0 0 0 12px rgba(255, 255, 255, 0);
   }
+}
+
+/* ─── Work carousels ─── */
+/* Looping coverflow: the centre tile is full size and plays; neighbours tilt away, shrink, dim
+   and slide their picture the other way (parallax), all from --d (signed distance from the
+   centre, in tiles) and --ad (its magnitude) written per frame. Transform/opacity only. */
+
+.wc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.wc-head .panel-label {
+  flex: 1;
+}
+
+.wc-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wc-count {
+  min-width: 4.5ch;
+  margin-right: 4px;
+  text-align: right;
+  font-family: var(--font-space), sans-serif;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: rgba(245, 245, 243, 0.55);
+}
+
+.wc-arrow {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 9999px;
+  color: rgba(245, 245, 243, 0.9);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition-property: scale, background-color;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 44px touch target */
+.wc-arrow::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+}
+
+.wc-arrow:active {
+  scale: 0.96;
+}
+
+.wc-arrow:focus-visible,
+.wc-track:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .wc-arrow:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.wc-track {
+  --item-w: clamp(170px, 18vw, 290px);
+  --gap: clamp(10px, 1.4vw, 22px);
+  position: relative;
+  display: flex;
+  gap: var(--gap);
+  --bleed: clamp(1rem, 3.5vw, 5rem); /* the work column's side padding */
+  margin-inline: calc(-1 * var(--bleed)); /* bleed to the screen edges */
+  /* Padding % is of the column, not the (wider) track: add the bleed back so the first and
+     last tiles can sit exactly in the centre */
+  padding: clamp(18px, 3vw, 40px) calc(50% + var(--bleed) - var(--item-w) / 2);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  cursor: grab;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Tiles fade out toward the screen edges. Static gradient overlays rather than a mask on the
+   scroller: a mask on something that scrolls is repainted every frame, costly on phones. */
+.wc-viewport {
+  position: relative;
+}
+
+.wc-viewport::before,
+.wc-viewport::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  bottom: 0;
+  width: clamp(28px, 9vw, 160px);
+  pointer-events: none;
+}
+
+.wc-viewport::before {
+  left: calc(-1 * clamp(1rem, 3.5vw, 5rem));
+  background: linear-gradient(90deg, var(--color-black), transparent);
+}
+
+.wc-viewport::after {
+  right: calc(-1 * clamp(1rem, 3.5vw, 5rem));
+  background: linear-gradient(270deg, var(--color-black), transparent);
+}
+
+.wc-track::-webkit-scrollbar {
+  display: none;
+}
+
+.wc-track[data-dragging] {
+  cursor: grabbing;
+  scroll-snap-type: none;
+}
+
+/* Mouse and trackpad: no browser snap. Its landing brakes hard; instead the carousel coasts
+   freely and then eases onto the nearest clip itself (see WorkCarousel). Touch keeps native
+   snapping, whose landing on phones is already smooth. */
+@media (hover: hover) and (pointer: fine) {
+  .wc-track {
+    scroll-snap-type: none;
+  }
+}
+
+.wc[data-orientation="landscape"] .wc-track {
+  --item-w: clamp(280px, 50vw, 820px);
+  --gap: clamp(14px, 2vw, 32px);
+}
+
+@media (max-width: 639px) {
+  .wc-track {
+    --item-w: 56vw;
+    --gap: 12px;
+  }
+
+  .wc[data-orientation="landscape"] .wc-track {
+    --item-w: 80vw;
+  }
+}
+
+.wc-item {
+  flex: 0 0 var(--item-w);
+  scroll-snap-align: center; /* no snap-stop: a strong flick may coast past several clips */
+  transform:
+    perspective(1400px)
+    translateX(calc(var(--d, 0) * -9%))
+    rotateY(calc(var(--d, 0) * -16deg))
+    scale(calc(1 - var(--ad, 0) * 0.13));
+  opacity: calc(1 - var(--ad, 0) * 0.3);
+}
+
+/* Only tiles near the centre (set from JS) keep their own layer while scrolling */
+.wc-item[data-near] {
+  will-change: transform;
+}
+
+.wc-media {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: var(--radius-lg);
+  clip-path: inset(0 round var(--radius-lg)); /* keeps video corners round on mobile Safari */
+  aspect-ratio: 9 / 16;
+  background: var(--color-surface-900);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: scale 150ms ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.wc[data-orientation="landscape"] .wc-media {
+  aspect-ratio: 16 / 9;
+}
+
+.wc-media:active {
+  scale: 0.98;
+}
+
+/* Parallax: the picture slides against the tile's own travel, revealing a different crop */
+.wc-media video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: translateX(calc(var(--d, 0) * -12%)) scale(1.26);
+  pointer-events: none;
+}
+
+/* Side tiles sit in shadow; the centre is fully lit */
+.wc-media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: #050505;
+  opacity: calc(var(--ad, 0) * 0.4);
+  pointer-events: none;
+}
+
+.wc-play {
+  position: absolute;
+  z-index: 3;
+  right: 12px;
+  bottom: 12px;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 9999px;
+  color: #fff;
+  background: rgba(10, 10, 10, 0.62); /* solid tint: no live blur over a playing video */
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  opacity: 0;
+  scale: 0.9;
+  transition-property: opacity, scale;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.wc-play svg {
+  translate: 1.5px 0;
+}
+
+/* Only the centre tile shows it's playable */
+.wc-item[data-active] .wc-play {
+  opacity: 1;
+  scale: 1;
+}
+
+.wc-item[data-active] .wc-media {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 30px 60px -24px rgba(0, 0, 0, 0.85);
+}
+
+.wc-caption {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  min-height: 1.5em; /* reserved so the page doesn't shift as the caption changes */
+  font-family: var(--font-space), sans-serif;
+  font-size: 14px;
+  color: rgba(245, 245, 243, 0.75);
+  animation: wc-caption-in 320ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.wc-caption-creator {
+  color: rgba(245, 245, 243, 0.5);
+}
+
+@keyframes wc-caption-in {
+  from {
+    opacity: 0;
+    translate: 0 4px;
+  }
+}
+
+/* ─── Phones and tablets: same look, cheaper to draw ─── */
+/* Live blurs and blend modes over a playing video are recomputed on every video frame, which
+   costs phones smoothness and battery. On touch devices each is swapped for a static
+   equivalent that reads almost the same. */
+@media (hover: none), (pointer: coarse) {
+  /* Light on the film: a plain soft highlight instead of a soft-light blend over the video */
+  .featured-pool {
+    mix-blend-mode: normal;
+    background: radial-gradient(ellipse 90% 80% at 0% 0%, rgba(255, 255, 255, 0.09), transparent 65%);
+  }
+
+  /* Grain is invisible at phone size; drop its blend layers */
+  .featured-beam::after,
+  .featured-platform-top::before {
+    display: none;
+  }
+
+  /* Smaller, cheaper glow behind the frame */
+  .featured-glow {
+    filter: blur(32px) saturate(1.4);
+    opacity: 0.28;
+  }
+
+  /* Controls over the playing film: solid tints, no live blur */
+  .featured-sound,
+  .featured-play,
+  .featured-runtime {
+    /* Standard property only: the CSS build adds the -webkit- copy itself (writing both made it
+       keep just the prefixed one, which Chrome ignores) */
+    backdrop-filter: none;
+  }
+
+  .featured-sound,
+  .featured-play {
+    background: rgba(10, 10, 10, 0.62);
+  }
+
+  .featured-runtime {
+    background: rgba(10, 10, 10, 0.6);
+  }
+}
+
+/* House-lights dimming driven by the JS scroll fallback (browsers without scroll timelines) */
+.featured[data-scroll-fallback] .featured-open::before {
+  opacity: var(--house, 0);
 }
