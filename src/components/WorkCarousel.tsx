@@ -23,8 +23,8 @@ interface WorkCarouselProps<P extends CarouselProject> {
   onOpen: (project: P, e: React.MouseEvent<HTMLElement>) => void;
 }
 
-// Fewer than this and a loop just shows the same clips side by side: lay them out once instead
-const LOOP_MIN = 4;
+// Loop whenever there's more than one clip, so the first clip has a neighbour on its left too
+const LOOP_MIN = 2;
 // Glides (arrows, drag release, landing after a flick): on-screen movement the user started, so a
 // strong ease-out that answers at once. Duration grows with distance: a short settle is quick,
 // a long throw takes its time, so the speed never jumps.

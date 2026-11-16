@@ -22,7 +22,7 @@ const creatorMap: Record<string, string> = {
 
 async function main() {
   const publicVideosPath = path.join(process.cwd(), 'public', 'videos');
-  const categories = ['cinematic', 'experiments', 'shortforms', 'longforms'];
+  const categories = ['promotional', 'cinematic', 'experiments', 'shortforms', 'longforms'];
 
   for (const category of categories) {
     const categoryPath = path.join(publicVideosPath, category);
@@ -71,6 +71,22 @@ async function main() {
     }
   }
   
+  // The ADNU film lives in /videos/featured (it's also the Spotlight), so it isn't picked up by the
+  // folder scan above. It leads the Promotional category (lowest sortOrder).
+  await prisma.project.upsert({
+    where: { slug: 'promotional-adnu-film' },
+    update: { sortOrder: -20, category: 'promotional' },
+    create: {
+      title: 'ADNU promotional film',
+      slug: 'promotional-adnu-film',
+      category: 'promotional',
+      videoUrl: '/videos/featured/adnu-promo.mp4',
+      aspectRatio: '16:9',
+      creator: 'FilmCy',
+      sortOrder: -20,
+    },
+  });
+
   console.log('Done adding videos to the database!');
 }
 

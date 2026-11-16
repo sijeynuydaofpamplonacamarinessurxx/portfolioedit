@@ -412,7 +412,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
   const filteredProjects =
     activeCategory === "all"
       ? [...projects].sort((a, b) => {
-        const order: Record<string, number> = { shortforms: 0, longforms: 1 };
+        const order: Record<string, number> = { promotional: -1, shortforms: 0, longforms: 1 };
         const aOrder = order[a.category] ?? 2;
         const bOrder = order[b.category] ?? 2;
         return aOrder - bOrder;
@@ -642,7 +642,7 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
                     {landscape.length > 0 && (
                       <WorkCarousel
                         key={`l-${activeCategory}`}
-                        label={single && tabLabel ? tabLabel : "Long form, cinematic & creative"}
+                        label={single && tabLabel ? tabLabel : "Landscape, 16:9"}
                         projects={landscape}
                         orientation="landscape"
                         onOpen={openFromCard}

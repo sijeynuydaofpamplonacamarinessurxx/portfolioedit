@@ -7,6 +7,11 @@ export const dynamic = "force-dynamic";
 
 // Fallback video data when database is empty (e.g., on Vercel with ephemeral SQLite)
 const FALLBACK_PROJECTS = [
+  // Promotional (lead the landscape carousel; the ADNU film first)
+  { id: "p0", title: "ADNU promotional film", slug: "promotional-adnu-film", category: "promotional", videoUrl: "/videos/featured/adnu-promo.mp4", thumbnailUrl: null, aspectRatio: "16:9", featured: false, sortOrder: -20, creator: "FilmCy", subcategory: null, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
+  { id: "p1", title: "BD-PARTY", slug: "promotional-bd-party", category: "promotional", videoUrl: "/videos/promotional/BD-PARTY.mp4", thumbnailUrl: null, aspectRatio: "16:9", featured: false, sortOrder: -10, creator: null, subcategory: null, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
+  { id: "p2", title: "DOOMSDAY-WATCHPARTY", slug: "promotional-doomsday-watchparty", category: "promotional", videoUrl: "/videos/promotional/DOOMSDAY-WATCHPARTY.mp4", thumbnailUrl: null, aspectRatio: "16:9", featured: false, sortOrder: -10, creator: null, subcategory: null, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
+
   // Shortforms
   { id: "s0", title: "FINAL2", slug: "shortforms-final2", category: "shortforms", videoUrl: "/videos/shortforms/FINAL2.mp4", thumbnailUrl: null, aspectRatio: "9:16", featured: false, sortOrder: -1, creator: "@mattinvestz", subcategory: null, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
   { id: "s1", title: "1080p - FULL EDIT TRIAL", slug: "shortforms-1080p-full-edit-trial", category: "shortforms", videoUrl: "/videos/shortforms/1080p - FULL EDIT TRIAL.mp4", thumbnailUrl: null, aspectRatio: "9:16", featured: false, sortOrder: 0, creator: "@joshukzz", subcategory: null, description: null, caseStudy: null, beforeUrl: null, afterUrl: null },
