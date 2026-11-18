@@ -3223,3 +3223,30 @@ button.pill-text {
     text-decoration-color: var(--color-accent-300);
   }
 }
+
+/* SIJEY watermark on each carousel card: top-left (the play badge owns bottom-right), small and
+   translucent so it marks the work without competing with it. Inert: no clicks, no selection. */
+.wc-watermark {
+  position: absolute;
+  z-index: 3; /* above the side-tile shade, so it stays legible on every card */
+  top: clamp(8px, 1vw, 14px);
+  left: clamp(10px, 1.1vw, 16px);
+  font-family: var(--font-display);
+  font-size: clamp(11px, 0.9vw, 14px);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.55);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* In the player: top-centre, because vertical videos are letterboxed with black bars at the
+   sides and a corner mark would land on the bar; the top centre is always over the picture.
+   Clear of the native controls along the bottom. */
+.lightbox-watermark {
+  top: clamp(10px, 1.4vw, 18px);
+  left: 50%;
+  translate: -50% 0;
+  font-size: clamp(12px, 1.1vw, 16px);
+}

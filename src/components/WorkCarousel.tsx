@@ -431,6 +431,10 @@ export default function WorkCarousel<P extends CarouselProject>({
                 controlsList="nodownload"
                 onContextMenu={(e) => e.preventDefault()}
               />
+              {/* Watermark (decorative, page-only: the video files themselves are unmarked) */}
+              <span className="wc-watermark" aria-hidden="true">
+                SIJEY
+              </span>
               <span className="wc-play" aria-hidden="true">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M7 4.8v14.4c0 .8.9 1.3 1.6.9l11.2-7.2c.6-.4.6-1.3 0-1.7L8.6 3.9C7.9 3.5 7 4 7 4.8z" />

@@ -185,6 +185,10 @@ export default function VideoLightbox({ isOpen, onClose, videoUrl, title, slug, 
             className="lightbox-video"
             playsInline
           />
+          {/* Watermark stays on while the video plays (page-only; the file itself is unmarked) */}
+          <span className="wc-watermark lightbox-watermark" aria-hidden="true">
+            SIJEY
+          </span>
           <button
             type="button"
             className="lightbox-play"
