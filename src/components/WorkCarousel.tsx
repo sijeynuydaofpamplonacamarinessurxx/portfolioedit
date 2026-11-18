@@ -72,7 +72,14 @@ export default function WorkCarousel<P extends CarouselProject>({
   const drag = useRef<{ x: number; scroll: number; t: number; vx: number; moved: boolean } | null>(null);
   const suppressClick = useRef(false);
 
-  const tileEls = () => [...(trackRef.current?.querySelectorAll<HTMLElement>(".wc-item") ?? [])];
+  // The tile list only changes on mount, so query it once rather than every frame
+  const tileCache = useRef<HTMLElement[]>([]);
+  const tileEls = () => {
+    if (!tileCache.current.length || !tileCache.current[0].isConnected) {
+      tileCache.current = [...(trackRef.current?.querySelectorAll<HTMLElement>(".wc-item") ?? [])];
+    }
+    return tileCache.current;
+  };
 
   // Distance between neighbouring tile centres
   const stepOf = (els: HTMLElement[]) => (els.length > 1 ? els[1].offsetLeft - els[0].offsetLeft : els[0]?.offsetWidth ?? 1);
@@ -103,7 +110,11 @@ export default function WorkCarousel<P extends CarouselProject>({
     });
   }, []);
 
-  // One pass per frame: read every position first, then write, so nothing forces extra layout
+  // One pass per frame. Positions come from the tile spacing (two reads), not from measuring every
+  // tile, and only the ~9 tiles around the centre are written to: tiles further out are parked at
+  // the edge pose once and then left alone. Off-screen copies cost nothing while scrolling.
+  const written = useRef(new Set<number>());
+  const parked = useRef(false);
   const update = useCallback(() => {
     frame.current = 0;
     const track = trackRef.current;
@@ -112,26 +123,48 @@ export default function WorkCarousel<P extends CarouselProject>({
     if (!els.length) return;
     const step = stepOf(els);
     const centre = track.scrollLeft + track.clientWidth / 2;
-    const ds = els.map((el) => (el.offsetLeft + el.offsetWidth / 2 - centre) / step);
+    const first = els[0].offsetLeft + els[0].offsetWidth / 2;
+    const pos = (centre - first) / step; // fractional index of the tile under the centre
+    const g = Math.max(0, Math.min(els.length - 1, Math.round(pos)));
+    const lo = Math.max(0, g - 4);
+    const hi = Math.min(els.length - 1, g + 4);
 
-    let g = 0;
-    ds.forEach((d, i) => {
-      if (Math.abs(d) < Math.abs(ds[g])) g = i;
-    });
+    const pose = (el: HTMLElement, d: number) => {
+      el.style.setProperty("--d", d.toFixed(3));
+      el.style.setProperty("--ad", Math.min(2, Math.abs(d)).toFixed(3));
+    };
 
-    els.forEach((el, i) => {
-      const d = Math.max(-3, Math.min(3, ds[i]));
-      el.style.setProperty("--d", d.toFixed(4));
-      el.style.setProperty("--ad", Math.min(2, Math.abs(d)).toFixed(4));
-      // Promote only the tiles that are actually moving on screen to their own layer
-      el.toggleAttribute("data-near", Math.abs(ds[i]) < 2.5);
-      // Load a clip only once the carousel is near the screen and the clip is near the middle
-      const video = el.querySelector<HTMLVideoElement>("video[data-src]");
-      if (video && nearView.current && step > 40 && Math.abs(ds[i]) < 3.5) {
-        video.src = video.dataset.src!;
-        video.removeAttribute("data-src");
+    // First pass: give every tile its resting pose once, so none starts in the centre pose
+    if (!parked.current) {
+      els.forEach((el, i) => pose(el, Math.max(-3, Math.min(3, i - pos))));
+      parked.current = true;
+    }
+
+    // Tiles that just left the window: park them once at the edge pose
+    for (const i of written.current) {
+      if (i < lo || i > hi) {
+        pose(els[i], i < g ? -3 : 3);
+        els[i].removeAttribute("data-near");
+        written.current.delete(i);
       }
-    });
+    }
+
+    for (let i = lo; i <= hi; i++) {
+      const el = els[i];
+      const d = Math.max(-3, Math.min(3, i - pos));
+      pose(el, d);
+      written.current.add(i);
+      // Promote only the tiles that are actually moving on screen to their own layer
+      el.toggleAttribute("data-near", Math.abs(d) < 2.5);
+      // Load a clip only once the carousel is near the screen and the clip is near the middle
+      if (nearView.current && step > 40) {
+        const video = el.querySelector<HTMLVideoElement>("video[data-src]");
+        if (video) {
+          video.src = video.dataset.src!;
+          video.removeAttribute("data-src");
+        }
+      }
+    }
 
     if (g !== activeGlobal.current) {
       els[activeGlobal.current]?.removeAttribute("data-active");
@@ -346,23 +379,6 @@ export default function WorkCarousel<P extends CarouselProject>({
     >
       <div className="wc-head">
         <p className="panel-label">{label}</p>
-        {n > 1 && (
-          <div className="wc-controls">
-            <span className="wc-count" aria-live="polite">
-              {active + 1} / {n}
-            </span>
-            <button type="button" className="wc-arrow" aria-label="Previous video" onClick={() => stepBy(-1)}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-            </button>
-            <button type="button" className="wc-arrow" aria-label="Next video" onClick={() => stepBy(1)}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M9 18l6-6-6-6" />
-              </svg>
-            </button>
-          </div>
-        )}
       </div>
 
       <div className="wc-viewport">
@@ -406,7 +422,8 @@ export default function WorkCarousel<P extends CarouselProject>({
               }}
             >
               <video
-                data-src={project.previewUrl ?? `${project.videoUrl}#t=0.1`}
+                // Side tiles sit paused on their first frame; starting 1.5s in skips dark intros
+                data-src={`${project.previewUrl ?? project.videoUrl}#t=1.5`}
                 muted
                 loop
                 playsInline
@@ -432,6 +449,25 @@ export default function WorkCarousel<P extends CarouselProject>({
           {current.subcategory ? `, ${current.subcategory}` : ""}
           {creator && <span className="wc-caption-creator">{creator}</span>}
         </p>
+      )}
+
+      {/* Controls centred under the clip, within easy thumb reach */}
+      {n > 1 && (
+        <div className="wc-controls">
+          <button type="button" className="wc-arrow" aria-label="Previous video" onClick={() => stepBy(-1)}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+          <span className="wc-count" aria-live="polite">
+            <span className="wc-count-current">{String(active + 1).padStart(2, "0")}</span> / {String(n).padStart(2, "0")}
+          </span>
+          <button type="button" className="wc-arrow" aria-label="Next video" onClick={() => stepBy(1)}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
+        </div>
       )}
     </section>
   );

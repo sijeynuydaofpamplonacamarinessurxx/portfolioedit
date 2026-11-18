@@ -500,6 +500,19 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
                 Start a project
               </a>
             </div>
+            {/* Leaves the site, so a quiet link rather than a third button competing with the two above */}
+            <a
+              href="https://filmcystudio.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hero-studio-link hero-rise"
+              style={{ "--i": 3, "--exit-y": "70px" } as React.CSSProperties}
+              onClick={playSelectSound}
+              aria-label="Go to FilmCy Studio (opens in a new tab)"
+            >
+              Go to FilmCy Studio
+              <ExternalIcon />
+            </a>
           </div>
 
           {/* Right: Description */}
@@ -517,7 +530,18 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
               <p className="panel-label" style={{ marginBottom: '1rem' }}>About</p>
               <div className="panel-copy">
                 <p className="panel-lead">
-                  I&apos;m the main video editor for <strong>FilmCy</strong>, working across short-form,
+                  I&apos;m the main video editor for{" "}
+                  <a
+                    href="https://filmcystudio.vercel.app/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="panel-studio-link"
+                    onClick={playSelectSound}
+                    aria-label="FilmCy (opens FilmCy Studio in a new tab)"
+                  >
+                    FilmCy
+                  </a>
+                  , working across short-form,
                   long-form and cinematic projects.
                 </p>
                 <p>

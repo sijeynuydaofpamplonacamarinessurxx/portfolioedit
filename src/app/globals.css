@@ -236,15 +236,6 @@ video {
 
 /* ─── Noise texture overlay ─── */
 
-.noise::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  pointer-events: none;
-  opacity: 0.015;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-}
 
 /* ─── Video aspect ratios ─── */
 
@@ -2813,20 +2804,26 @@ button.pill-text {
   flex: 1;
 }
 
+/* Centred under the caption: prev, counter, next */
 .wc-controls {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 0.85rem;
 }
 
 .wc-count {
-  min-width: 4.5ch;
-  margin-right: 4px;
-  text-align: right;
+  min-width: 7ch; /* fixed width so the arrows never shift as the number changes */
+  text-align: center;
   font-family: var(--font-space), sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   font-variant-numeric: tabular-nums;
-  color: rgba(245, 245, 243, 0.55);
+  color: rgba(245, 245, 243, 0.45);
+}
+
+.wc-count-current {
+  color: rgba(245, 245, 243, 0.92);
 }
 
 .wc-arrow {
@@ -3114,4 +3111,115 @@ button.pill-text {
 /* House-lights dimming driven by the JS scroll fallback (browsers without scroll timelines) */
 .featured[data-scroll-fallback] .featured-open::before {
   opacity: var(--house, 0);
+}
+
+/* Floor reflections: each tile mirrored faintly below, fading out, like the Spotlight's stage.
+   On the tile (not the clipped media) so the rounded clip doesn't cut it off. The track gets
+   extra bottom room for it, sized from the tile's height. Unsupported browsers just skip it. */
+/* Only the centre clip is mirrored, and only on desktop: a reflection of a moving, playing video
+   re-renders every frame, so mirroring every tile made scrolling lag */
+@media (hover: hover) and (pointer: fine) {
+  .wc-item[data-active] {
+    -webkit-box-reflect: below 10px linear-gradient(transparent 70%, rgba(255, 255, 255, 0.2));
+  }
+}
+
+.wc-track {
+  --reflect-room: calc(var(--item-w) * 16 / 9 * 0.24);
+  padding-bottom: var(--reflect-room);
+}
+
+.wc[data-orientation="landscape"] .wc-track {
+  --reflect-room: calc(var(--item-w) * 9 / 16 * 0.26);
+}
+
+/* ─── Phones: drop per-frame costs ─── */
+/* Live backdrop blurs over the playing hero video re-blur on every video frame, the biggest cost
+   on a phone GPU. Each surface gets a solid tint that reads nearly the same. */
+@media (hover: none), (pointer: coarse) {
+  .glass-panel,
+  .glass-panel[data-liquid],
+  .pill,
+  .hero-chip,
+  .hero-btn-ghost,
+  .cat-bar {
+    backdrop-filter: none;
+  }
+
+  .glass-panel {
+    background: linear-gradient(160deg, rgba(38, 44, 44, 0.92), rgba(18, 20, 20, 0.94));
+  }
+
+  .pill,
+  .hero-chip,
+  .hero-btn-ghost {
+    background-color: rgba(30, 32, 32, 0.85);
+  }
+
+  .cat-bar {
+    background-color: rgba(18, 18, 18, 0.92);
+  }
+
+  /* Carousel: tiles still tilt and recede, but the picture inside no longer slides each frame */
+  .wc-media video {
+    transform: scale(1.04);
+  }
+
+  /* The beam's gradient is already soft; its extra blur pass isn't worth it on a phone */
+  .featured-beam {
+    filter: none;
+  }
+}
+
+/* Quiet link to the team studio under the hero buttons */
+.hero-studio-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 0.25rem;
+  padding: 10px 2px; /* 44px tall tap target around the text */
+  font-family: var(--font-space), sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(245, 245, 243, 0.62);
+  text-decoration: underline;
+  text-decoration-color: rgba(245, 245, 243, 0.25);
+  text-underline-offset: 4px;
+  transition-property: color, text-decoration-color;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hero-studio-link svg {
+  opacity: 0.7;
+}
+
+.hero-studio-link:focus-visible,
+.panel-studio-link:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* "FilmCy" in the About copy links to the studio too */
+.panel-studio-link {
+  font-weight: 600;
+  color: #fff;
+  text-decoration: underline;
+  text-decoration-color: rgba(94, 234, 212, 0.55);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 150ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hero-studio-link:hover {
+    color: rgba(245, 245, 243, 0.95);
+    text-decoration-color: rgba(245, 245, 243, 0.6);
+  }
+
+  .panel-studio-link:hover {
+    text-decoration-color: var(--color-accent-300);
+  }
 }
