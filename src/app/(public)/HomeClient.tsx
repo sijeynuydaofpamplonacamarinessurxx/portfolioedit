@@ -412,6 +412,8 @@ export default function HomeClient({ projects, beforeAfterProjects, settings }: 
   const filteredProjects =
     activeCategory === "all"
       ? [...projects].sort((a, b) => {
+        // Featured projects lead the All tab, ahead of the category order
+        if (a.featured !== b.featured) return a.featured ? -1 : 1;
         const order: Record<string, number> = { promotional: -1, shortforms: 0, longforms: 1 };
         const aOrder = order[a.category] ?? 2;
         const bOrder = order[b.category] ?? 2;

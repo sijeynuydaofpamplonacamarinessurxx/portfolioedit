@@ -87,6 +87,13 @@ async function main() {
     },
   });
 
+  // The FilmCy logo animation is picked up from /videos/experiments by the scan above; give it a
+  // real title and credit, and feature it so it leads its tab and the All tab.
+  await prisma.project.updateMany({
+    where: { slug: 'experiments-filmcy-logo' },
+    data: { title: 'FilmCy logo animation', creator: 'FilmCy', featured: true, sortOrder: -30 },
+  });
+
   console.log('Done adding videos to the database!');
 }
 
